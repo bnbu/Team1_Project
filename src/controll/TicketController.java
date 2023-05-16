@@ -8,22 +8,23 @@ import service.ITicketService;
 public class TicketController implements ITicketService {
 	private BufferedReader br;
 	private PreparedStatement pstmtTotalMovie, pstmtTotalScreeningInfo, pstmtInsertTicket, pstmtCancelTicket,
-							  pstmtSearchTicketInfo, pstmtSearchSeatInfo, pstmtSearchScreeningInfo, pstmtSearchTheaterInfo,
-                pstmtSearchValidTicketInfo;
+	pstmtSearchTicketInfo, pstmtSearchSeatInfo, pstmtSearchScreeningInfo, pstmtSearchTheaterInfo,
+	pstmtSearchValidTicketInfo;
 	private final String sqlTotalMovie = "SELECT * FROM MOVIE",
-						 sqlTotalScreeningInfo = "SELECT * FROM SCREENING_INFO",
-						 sqlInsertTicket = "INSERT INTO TICKETING VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
-						 sqlCancelTicket = "UPDATE TICKETING SET VALID = 0 WHERE TICKETN_NO = ?",
-						 sqlSearchTicketInfo = "SELECT * FROM TICKETING WHERE MEMBER_BNO = ?",
-						 sqlSearchSeatInfo = "SELECT * FROM  SEAT_INFO SI JOIN TICKETING T ON SI.TICKET_NO = T.TICKET_NO WHERE T.VALID = 1 AND SCREENINFO_NO = ?",
-						 sqlSearchScreeningInfo = "SELECT * FROM SCREENING_INFO WHERE MOVIE_NO = ?",
-						 sqlSearchTheaterInfo = "SELECT SEAT_ROW, SEAT_COL FROM THEATER WHERE THEATER_NO = ?",
-             sqlSearchValidTicketInfo = "SELECT * FROM TICKETING WHERE MEMBER_BNO = ? AND VALID = 1";
+			sqlTotalScreeningInfo = "SELECT * FROM SCREENING_INFO",
+			sqlInsertTicket = "INSERT INTO TICKETING VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+			sqlCancelTicket = "UPDATE TICKETING SET VALID = 0 WHERE TICKETN_NO = ?",
+			sqlSearchTicketInfo = "SELECT * FROM TICKETING WHERE MEMBER_BNO = ?",
+			sqlSearchSeatInfo = "SELECT * FROM  SEAT_INFO SI JOIN TICKETING T ON SI.TICKET_NO = T.TICKET_NO WHERE T.VALID = 1 AND SCREENINFO_NO = ?",
+			sqlSearchScreeningInfo = "SELECT * FROM SCREENING_INFO WHERE MOVIE_NO = ?",
+			sqlSearchTheaterInfo = "SELECT SEAT_ROW, SEAT_COL FROM THEATER WHERE THEATER_NO = ?",
+			sqlSearchValidTicketInfo = "SELECT * FROM TICKETING WHERE MEMBER_BNO = ? AND VALID = 1";
+	
 	private ResultSet rs;
-  private ResultSetMetaData rsmd ;
+	private ResultSetMetaData rsmd ;
 	public TicketController(Connection conn, BufferedReader br) {
 		this.br = br;
-		
+
 		try {
 			pstmtTotalMovie = conn.prepareStatement(sqlTotalMovie);
 			pstmtTotalScreeningInfo = conn.prepareStatement(sqlTotalScreeningInfo);
@@ -33,12 +34,14 @@ public class TicketController implements ITicketService {
 			pstmtSearchSeatInfo = conn.prepareStatement(sqlSearchSeatInfo);
 			pstmtSearchScreeningInfo = conn.prepareStatement(sqlSearchScreeningInfo);
 			pstmtSearchTheaterInfo = conn.prepareStatement(sqlSearchTheaterInfo);
+			pstmtSearchValidTicketInfo = conn.prepareStatement(sqlSearchValidTicketInfo);
+			
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private String getRankString(int i) {
 		if (i == 0) return "전체";
 		else if (i == 1) return "12세";
@@ -49,8 +52,8 @@ public class TicketController implements ITicketService {
 		try {
 			rs = pstmtTotalMovie.executeQuery();
 			ResultSetMetaData rsmd = rs.getMetaData();
-			
-			
+
+
 			System.out.println(String.format("%-6s|%-12s|%-10s|%-30s",
 					"번호", "장르", "등급", "제목"));
 			System.out.println("-------+----------------------------------------------------------");
@@ -78,7 +81,7 @@ public class TicketController implements ITicketService {
 			e.printStackTrace();
 			return;
 		}
-		
+
 		boolean[][] chk = new boolean[rows][cols];
 		try {
 			while (seats.next()) {
@@ -89,7 +92,7 @@ public class TicketController implements ITicketService {
 			e.printStackTrace();
 			return;
 		}
-		
+
 		System.out.println("----------------------------------------------------------");
 		// 열 번호도 출력하기
 		for (int i = 0; i < rows; i++) {
@@ -105,15 +108,15 @@ public class TicketController implements ITicketService {
 
 	public void ticketing() {
 		showMovies();
-		
+
 		// 0. 영화를 선택
 		int idx = -1;
-		
+
 		while (true) {
 			try {
 				System.out.print("영화의 번호를 입력 : ");
 				idx = Integer.parseInt(br.readLine());
-				
+
 				pstmtSearchScreeningInfo.setInt(1, idx);
 				rs = pstmtSearchScreeningInfo.executeQuery();
 				break;
@@ -122,7 +125,7 @@ public class TicketController implements ITicketService {
 				System.out.println("잘못된 입력입니다");
 			}
 		}
-		
+
 		// 1.선택한 영화로 상영정보를 가져온다
 		try {
 			System.out.println(String.format("%-6s|%-6s|%-20s|%-10s|%-10s", 
@@ -142,7 +145,7 @@ public class TicketController implements ITicketService {
 			try {
 				System.out.print("상영 정보의 번호를 입력 : ");
 				idx = Integer.parseInt(br.readLine());
-				
+
 				pstmtSearchSeatInfo.setInt(1, idx);
 				rs = pstmtSearchScreeningInfo.executeQuery();
 				break;
@@ -151,7 +154,7 @@ public class TicketController implements ITicketService {
 				System.out.println("잘못된 입력입니다");
 			}
 		}
-		
+
 		// 3. 인원수 (청소년, 일반 등등)을 결정
 		// 0 청소년 1 일반 2 우대
 		int[] age = new int[3];
@@ -170,12 +173,12 @@ public class TicketController implements ITicketService {
 				System.out.println("잘못된 입력입니다");
 			}
 		}
-		
+
 		// 4. 상영정보번호로 존재하는 좌석을 가져와서, 좌석의 여부를 알려줌
 		showSeat(rs);
 		// 		=> 좌석정보의 에매 번호로부터 join을 통해 vaild로 좌석 계산에 포함할지 말지 계산
-		
-		
+
+
 		// 5. 좌석을 인원수만큼 선택
 		String[] selected = new String[total];
 		while (true) {
@@ -189,7 +192,7 @@ public class TicketController implements ITicketService {
 				System.out.println("잘못된 입력입니다");
 			}
 		}
-		
+
 		// 6. 예매 완료
 		System.out.println("예매 완료");
 	}
@@ -213,24 +216,24 @@ public class TicketController implements ITicketService {
 			rsmd = rs.getMetaData(); // 해당 테이블에 대한 정보
 
 			while( rs.next() ) {
-					int valid = rs.getInt(8);
-					switch ( valid  ) {
-					case 0: // 취소
-						System.out.print(rsmd.getColumnName(1) + " : " + rs.getString(1) + " ");
-						System.out.print(rsmd.getColumnName(3) + " : " + rs.getString(3) + " ");
-						System.out.print(rsmd.getColumnName(4) + " : " + rs.getInt(4) + " ");
-						System.out.print(rsmd.getColumnName(5) + " : " + rs.getInt(5) + " ");
-						System.out.print(rsmd.getColumnName(6) + " : " + rs.getDate(6) + " ");
-						System.out.print(rsmd.getColumnName(7) + " : " + rs.getDate(7) + " ");
-						break;
-					case 1: // 
-						System.out.print(rsmd.getColumnName(1) + " : " + rs.getString(1) + " ");
-						System.out.print(rsmd.getColumnName(3) + " : " + rs.getString(3) + " ");
-						System.out.print(rsmd.getColumnName(4) + " : " + rs.getInt(4) + " ");
-						System.out.print(rsmd.getColumnName(5) + " : " + rs.getInt(5) + " ");
-						System.out.print(rsmd.getColumnName(6) + " : " + rs.getDate(6) + " ");
-						break;
-					} // end switch
+				int valid = rs.getInt(8);
+				switch ( valid  ) {
+				case 0: // 취소
+					System.out.print(rsmd.getColumnName(1) + " : " + rs.getString(1) + " ");
+					System.out.print(rsmd.getColumnName(3) + " : " + rs.getString(3) + " ");
+					System.out.print(rsmd.getColumnName(4) + " : " + rs.getInt(4) + " ");
+					System.out.print(rsmd.getColumnName(5) + " : " + rs.getInt(5) + " ");
+					System.out.print(rsmd.getColumnName(6) + " : " + rs.getDate(6) + " ");
+					System.out.print(rsmd.getColumnName(7) + " : " + rs.getDate(7) + " ");
+					break;
+				case 1: // 
+					System.out.print(rsmd.getColumnName(1) + " : " + rs.getString(1) + " ");
+					System.out.print(rsmd.getColumnName(3) + " : " + rs.getString(3) + " ");
+					System.out.print(rsmd.getColumnName(4) + " : " + rs.getInt(4) + " ");
+					System.out.print(rsmd.getColumnName(5) + " : " + rs.getInt(5) + " ");
+					System.out.print(rsmd.getColumnName(6) + " : " + rs.getDate(6) + " ");
+					break;
+				} // end switch
 			} // end while
 		} catch (Exception e) { e.printStackTrace(); }
 	} // end ticketHistory
@@ -241,7 +244,7 @@ public class TicketController implements ITicketService {
 			pstmtSearchValidTicketInfo.setString(1, ID);
 			rs = pstmtSearchValidTicketInfo.executeQuery();
 			rsmd = rs.getMetaData(); // 해당 테이블에 대한 정보
-			
+
 			while( rs.next() ) {
 				System.out.print(rsmd.getColumnName(1) + " : " + rs.getString(1) + " ");
 				System.out.print(rsmd.getColumnName(3) + " : " + rs.getString(3) + " ");
@@ -249,7 +252,7 @@ public class TicketController implements ITicketService {
 				System.out.print(rsmd.getColumnName(5) + " : " + rs.getInt(5) + " ");
 				System.out.print(rsmd.getColumnName(6) + " : " + rs.getDate(6) + " ");
 			};
-			
+
 		} catch (SQLException e) { e.printStackTrace(); }
 		// 2. 취소하고자 하는 예매 정보를 선택
 		// 3. 해당 예매 정보의 valid를 제거
@@ -258,7 +261,7 @@ public class TicketController implements ITicketService {
 			pstmtCancelTicket.setString(1, TicketNo);
 			rs = pstmtCancelTicket.executeQuery();
 			rsmd = rs.getMetaData();
-			
+
 			while( rs.next() ) {
 				System.out.print(rsmd.getColumnName(1) + " : " + rs.getString(1) + " ");
 				System.out.print(rsmd.getColumnName(3) + " : " + rs.getString(3) + " ");
@@ -267,12 +270,12 @@ public class TicketController implements ITicketService {
 				System.out.print(rsmd.getColumnName(6) + " : " + rs.getDate(6) + " ");
 				System.out.print(rsmd.getColumnName(7) + " : " + rs.getDate(7) + " ");
 			};
-			
+
 		} catch (SQLException e) { e.printStackTrace(); }
 	}
 
 	public void showScreens() {
 		// 1. 상영정보를 불러옴
 	}
-	
+
 }
