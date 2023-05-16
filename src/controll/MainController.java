@@ -15,12 +15,15 @@ public class MainController {
 	private ITicketService ts;
 	
 	private Connection conn;
+	private BufferedReader br;
 	
 	public MainController() {
 		try {
 			conn = ConnectionSingletonHelper.getConnection();
+			br = new BufferedReader(new InputStreamReader(System.in));
 			
 			// Service 할당
+			ts = new TicketController(conn, br);
 			
 			// pstmt 할당
 			
@@ -31,6 +34,6 @@ public class MainController {
 	}
 	
 	public void menu() {
-		
+		ts.showScreens();
 	}
 }
