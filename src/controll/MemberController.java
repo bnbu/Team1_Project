@@ -8,8 +8,9 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.regex.Pattern;
 import java.sql.SQLException;
+import java.util.regex.Pattern;
+
 import model.MemberVO;
 import service.IMemberService;
 import util.ConnectionSingletonHelper;
@@ -18,7 +19,6 @@ public class MemberController implements IMemberService {
 
     private static Connection conn;
     private static BufferedReader br;
-    private static MemberVO vo = new MemberVO();
     private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember;
     private final String sqlInsertMember = "INSERT INTO MEMBER (member_id, member_name, member_pwd, member_phone, member_birthday) VALUES(?,?,?,?,?)", 
             sqlSelectMemberValid = "SELECT MEMBER_ID,MEMBER_PWD,MEMBER_VALID FROM MEMBER WHERE MEMBER_ID=? AND MEMBER_PWD=?",
@@ -50,54 +50,51 @@ public class MemberController implements IMemberService {
         pstmtInsertMember = conn.prepareStatement(sqlInsertMember);
         pstmtInsertMember.setString(1, member_Id);
         pstmtInsertMember.setString(2, member_Name);
+        pstmtInsertMember.setString(3, sha256.encrypt(member_Pwd));
         pstmtInsertMember.setString(4, member_Phone);
         pstmtInsertMember.setString(5, member_Birthday);
 
-        String password = member_Pwd;
-        String cryptongram = sha256.encrypt(password);
-        System.out.println(cryptongram);
-        System.out.println("비밀 번호가 일치하는가 " + cryptongram.equals(sha256.encrypt(member_Pwd)));// 일치여부
-        pstmtInsertMember.setString(3, cryptongram);
-        int result = pstmtInsertMember.executeUpdate();// 값 저장
+        pstmtInsertMember.executeUpdate();// 값 저장
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
 
     @Override
-    public void login() throws IOException {
+    public MemberVO login() throws IOException {
+    	 SHA256 sha256 = new SHA256();
+    	 MemberVO vo = new MemberVO();
+
       try {
         System.out.print("ID: ");
         String member_Id = br.readLine();
         System.out.print("PassWord: ");
         String member_Pwd = br.readLine();
         pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
-        pstmtSelectMemberValid.setString(1, member_Id); // 1계정
-        pstmtSelectMemberValid.setString(2, member_Pwd);// 2비밀번호
+        pstmtSelectMemberValid.setString(1, member_Id);
+        pstmtSelectMemberValid.setString(2, sha256.encrypt(member_Pwd));
         ResultSet rs = pstmtSelectMemberValid.executeQuery();
 
         if (!rs.isBeforeFirst()) {
           System.out.println("로그인이 되지않았습니다.");
-          return;
         }
 
         while (rs.next()) {
-
           vo.setMember_id(rs.getString(1));
           vo.setMember_pwd(rs.getString(2));
           vo.setMember_valid(rs.getInt(3));
         }
-        pstmtUpdateMemberLoginValid = conn.prepareStatement(sqlUpdateMemberLoginVaild);
-        pstmtUpdateMemberLoginValid.setInt(1, 1);
-        pstmtUpdateMemberLoginValid.setString(2, vo.getMember_id());
-        int result = pstmtUpdateMemberLoginValid.executeUpdate(); // valid 를 바꿔주기 위함
-        System.out.println(result);// 성공한 값만큼 리턴한다.
+        pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo );
+        pstmtUpdateMemberLoginInfo.setInt(1, 1);
+        pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
+        pstmtUpdateMemberLoginInfo.executeUpdate();
       } catch (Exception e) {
         e.printStackTrace();
       } finally {
 
       }
       System.out.println("로그인이 되었습니다.");
+      return vo;
     }
 
     @Override
