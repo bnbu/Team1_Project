@@ -140,7 +140,7 @@ public class TicketController implements ITicketService {
 		// 0. 영화를 선택
 		String str;
 		int idx = -1;
-
+		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
 				System.out.print("영화의 번호를 입력 : ");
@@ -173,6 +173,7 @@ public class TicketController implements ITicketService {
 		}
 
 		// 2. 상영정보를 선택
+		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
 				System.out.print("상영 정보의 번호를 입력 : ");
@@ -202,6 +203,7 @@ public class TicketController implements ITicketService {
 		// 0 청소년 1 일반 2 우대
 		int[] age = new int[3];
 		int total = 0;
+		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
 				total = 0;
@@ -239,6 +241,7 @@ public class TicketController implements ITicketService {
 
 		// 5. 좌석을 인원수만큼 선택
 		String[] selected = new String[total];
+		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
 				System.out.println("좌석은 (열행)순으로 입력해주세요 ex) A1 D15");
@@ -349,9 +352,7 @@ public class TicketController implements ITicketService {
 			System.out.println("──────────┼──────────┼────────┼─────────────┼────────────┼────────────────────────────────────────────────");
 
 			while( rs.next() ) {
-				
 				System.out.printf("%-10s│%-10s│%-8s│%-12s│%-12s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6));
-			
 			};
 			System.out.println("──────────┴──────────┴────────┴─────────────┴────────────┴────────────────────────────────────────────────");
 
@@ -360,10 +361,14 @@ public class TicketController implements ITicketService {
 		// 3. 해당 예매 정보의 valid를 제거
 		String TicketNo = null;
 		try {
+			System.out.println("메뉴로 돌아가기 : q");
 			do {
 				try {
 					System.out.print("취소할 예매번호를 입력해주세요 : ");
-					TicketNo = br.readLine();			
+					TicketNo = br.readLine();
+					
+					if ( TicketNo.equalsIgnoreCase("q") ) return;
+						
 
 				} catch (Exception e) {
 					e.printStackTrace();
