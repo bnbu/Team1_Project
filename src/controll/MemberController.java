@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import model.MemberVO;
 import service.IMemberService;
 import util.ConnectionSingletonHelper;
+import util.LoginManager;
 
 public class MemberController implements IMemberService {
     private static Connection conn;
@@ -103,14 +104,15 @@ public class MemberController implements IMemberService {
     }
 
     @Override
-    public void logout() {
+    public MemberVO logout() {
       try {
-        pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
+        vo = null;
+        System.out.println("로그아웃 되었습니다.");
+        return vo;
       } catch (Exception e) {
         e.printStackTrace();
-      } finally {
-
       }
+      return vo;
     }
 
     @Override
@@ -177,7 +179,7 @@ public class MemberController implements IMemberService {
     }
 
     @Override
-    public void removeMember() throws IOException {
+    public void removeMember(LoginManager lm) throws IOException {
         SHA256 sha256 = new SHA256();
         try {
             System.out.println("───────────────────회원 탈퇴───────────────────");
@@ -198,6 +200,8 @@ public class MemberController implements IMemberService {
             
             int result = pstmtDeleteMember.executeUpdate();
             System.out.println(result<1?"다시 시도해주세요":"탈퇴 처리되었습니다");
+            vo = null;
+            lm.loginUser(vo);
         } catch (SQLException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
@@ -255,12 +259,21 @@ public class MemberController implements IMemberService {
         System.out.println("4. 돌아가기");
         System.out.println("───────────────────────────────────────────────");
         System.out.println();
+        System.out.print("입력: ");
     }
 
-	public void loginMenu() throws NumberFormatException, IOException {
+	public void loginMenu(LoginManager lm) throws NumberFormatException, IOException {
         while (true) {
+            System.out.println("───────────────────────────────────────────────");
+            System.out.println("             영화 예매 시스템 시작");
+            System.out.println("───────────────────────────────────────────────");
+            System.out.println("1. 회원가입");
+            System.out.println("2. 로그인");
+            System.out.println("3. 시스템 종료");
+            System.out.println("───────────────────────────────────────────────");
             System.out.println();
-
+            
+            System.out.print("입력: ");
             switch (Integer.parseInt(br.readLine())) {
             case 1:
                 try {
@@ -274,21 +287,21 @@ public class MemberController implements IMemberService {
                 }
                 break; // 회원가입
             case 2:
-                login();
+                lm.loginUser(login());
+                if(lm.getLoginUser()!=null)return;
                 break; // 로그인
-            case 3:
-                logout();
-                break; // 로그아웃
-            case 4: System.out.println("메인메뉴로 돌아갑니다.");
+            case 3: System.out.println("시스템을 종료합니다.");
+                System.exit(0);
                 return;
             } // switch end
         } // while end
     }
 
     @Override
-    public void memberMenu() throws NumberFormatException, IOException {
+    public void memberMenu(LoginManager lm) throws NumberFormatException, IOException {
         while (true) {
             menu();
+            
             switch (Integer.parseInt(br.readLine())) {
             case 1:
                 myProfile();
@@ -297,8 +310,8 @@ public class MemberController implements IMemberService {
                 editProfile();
                 break; // 회원 수정
             case 3:
-                removeMember();
-                break; // 회원 삭제
+                removeMember(lm);
+                return; // 회원 삭제
             case 4: System.out.println("메인메뉴로 돌아갑니다.");
                 return;
             } // switch end
