@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
+import model.MemberVO;
+
 public interface IMemberService {
 	void register() throws IOException, NoSuchAlgorithmException;
-	void login() throws IOException;
+	MemberVO login() throws IOException;
 	void logout();
 	
 	void myProfile() throws SQLException, IOException;
