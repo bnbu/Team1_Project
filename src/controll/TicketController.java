@@ -7,8 +7,10 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import service.ITicketService;
+import util.ConnectionSingletonHelper;
 
 public class TicketController implements ITicketService {
+    private static Connection conn;
 	private BufferedReader br;
 	private PreparedStatement pstmtTotalMovie, pstmtTotalScreeningInfo, pstmtInsertTicket, pstmtCancelTicket,
 	pstmtSearchTicketInfo, pstmtSearchSeatInfo, pstmtSearchScreeningInfo, pstmtSearchTheaterInfo, pstmtSearchTicketInfoByNo,
@@ -29,9 +31,9 @@ public class TicketController implements ITicketService {
 			
 	private ResultSet rs;
 	private ResultSetMetaData rsmd ;
-	public TicketController(Connection conn, BufferedReader br) {
-		this.br = br;
-
+	public TicketController() throws Exception {
+		br = new BufferedReader(new InputStreamReader(System.in));
+		conn = ConnectionSingletonHelper.getConnection();
 		try {
 			pstmtTotalMovie = conn.prepareStatement(sqlTotalMovie);
 			pstmtTotalScreeningInfo = conn.prepareStatement(sqlTotalScreeningInfo);

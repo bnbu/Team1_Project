@@ -36,9 +36,9 @@ public class MainController {
             mainMenu();
             int select = Integer.parseInt(br.readLine());
             switch (select) {
-            case 1: ts.ticketing();
+            case 1: ts.ticketing(lm.getLoginUser().getMember_id());
                 break; // 예매
-            case 2: ts.ticketHistory();
+            case 2: ts.ticketHistory(lm.getLoginUser().getMember_id());
                 break; // 예매 내역
             case 3: ms.memberMenu();
                 break; // 회원정보 관리
