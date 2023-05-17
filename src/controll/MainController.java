@@ -1,8 +1,8 @@
 package controll;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
+import java.io.*;
+import java.sql.*;
+import java.util.*;
 import service.IMemberService;
 import service.ITicketService;
 import util.LoginManager;
@@ -18,7 +18,7 @@ public class MainController {
         br = new BufferedReader(new InputStreamReader(System.in));
         try {
             ms = new MemberController();
-//            ts = new TicketController();
+            ts = new TicketController();
         } catch (Exception e) {
             e.printStackTrace();
         }
