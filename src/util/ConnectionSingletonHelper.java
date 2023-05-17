@@ -12,7 +12,7 @@ public class ConnectionSingletonHelper {
 	public static Connection getConnection() throws Exception {
 		if (conn != null) return conn;
 		Properties properties = new Properties();
-        Reader reader = new FileReader("./lib/oracle.properties"); // 읽어올 파일 지정
+        Reader reader = new FileReader("./src/lib/oracle.properties"); // 읽어올 파일 지정
         properties.load(reader);
         
         String driverName = properties.getProperty("driver");

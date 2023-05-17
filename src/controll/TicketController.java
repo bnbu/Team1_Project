@@ -203,7 +203,6 @@ public class TicketController implements ITicketService {
 		// 0 청소년 1 일반 2 우대
 		int[] age = new int[3];
 		int total = 0;
-		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
 				total = 0;
@@ -244,7 +243,7 @@ public class TicketController implements ITicketService {
 		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
-				System.out.println("좌석은 (열행)순으로 입력해주세요 ex) A1 D15");
+				System.out.println("좌석은 (행열)순으로 입력해주세요 ex) A1 D15");
 				System.out.printf("%d개의 좌석을 선택해주세요 : ", total);
 				
 				// 좌석 입력 후 올바른 좌석형식인지 검사
