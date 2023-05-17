@@ -110,26 +110,26 @@ public class TicketController implements ITicketService {
 		for (int i = 0; i < cols / 5; i++) {
 			System.out.print("┬────────────────────");
 		}
-		System.out.println("────┐");
+		System.out.println("───┐");
 		System.out.print("     ");
 		for (int i = 1; i <= cols; i++) {
 			System.out.printf("%-4d", i);
-			if (i % 5 == 0) System.out.print("  ");
+			if (i % 5 == 0) System.out.print(" ");
 		}
-		System.out.println("│");
+		System.out.println(" │");
 		// 열 번호도 출력하기
 		for (int i = 0; i < rows; i++) {
 			System.out.print((char)('A' + i) + "    ");
 			for (int j = 0; j < cols; j++) {
 				System.out.printf("%-4s", (chk[i][j] ? "■" : "□"));
-				if ((j + 1) % 5 == 0) System.out.print("  ");
+				if ((j + 1) % 5 == 0) System.out.print(" ");
 			}
-			System.out.println("│");
+			System.out.println(" │");
 		}
 		System.out.print("───");
 		for (int i = 0; i < cols / 5; i++)
 			System.out.print("┴────────────────────");
-		System.out.println("────┘");
+		System.out.println("───┘");
 		
 		return chk;
 	}
