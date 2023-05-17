@@ -52,13 +52,13 @@ public class MainController {
     }
 
     private void mainMenu() {
-        System.out.println("=====================메인 메뉴========================");
+        System.out.println("──────────────────────메인 메뉴──────────────────────");
         System.out.println("1. 예매");
         System.out.println("2. 예매 내역");
         System.out.println("3. 회원정보 관리");
         System.out.println("4. 로그아웃");
         System.out.println("0. 시스템 종료");
-        System.out.println("======================================================");
+        System.out.println("─────────────────────────────────────────────────────");
         System.out.println();
     }
 }

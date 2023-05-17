@@ -118,19 +118,19 @@ public class MemberController implements IMemberService {
         sb.setLength(0);
         sdf = new SimpleDateFormat("yyyy-MM-dd");
         try {
-            System.out.println("===================회원정보 보기======================");
+            System.out.println("───────────────────회원정보 보기───────────────────");
             pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
             pstmtSelectMember.setString(1, vo.getMember_id()); // 사용자 직접입력 X
 
             ResultSet rs = pstmtSelectMember.executeQuery();
-            sb.append("--------------------┳---------------------------------").append("\n");
+            sb.append("────────────────────┬─────────────────────────────────").append("\n");
             sb.append(String.format("%-17s|%-6s|%-8s|%s", "아이디", "이름", "전화번호", "생일")).append("\n");
-            sb.append("--------------------+---------------------------------").append("\n");
+            sb.append("────────────────────┼─────────────────────────────────").append("\n");
             while (rs.next()) {
                 int len = 20 - (rs.getString(1).length() - 1) / 3;
                 sb.append(String.format("%-" + len + "s|%-5s|%-12s|%-8s", rs.getString(1), rs.getString(2),
                         rs.getString(3), sdf.format(rs.getDate(4)))).append("\n");
-                sb.append("--------------------┸---------------------------------").append("\n");
+                sb.append("────────────────────┴─────────────────────────────────").append("\n");
             }
             System.out.println(sb);
         } catch (SQLException e) {
@@ -142,7 +142,7 @@ public class MemberController implements IMemberService {
     public void editProfile() throws IOException {
         SHA256 sha256 = new SHA256();
         try {
-            System.out.println("===================회원정보 수정======================");
+            System.out.println("───────────────────회원정보 수정───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
             
@@ -180,7 +180,7 @@ public class MemberController implements IMemberService {
     public void removeMember() throws IOException {
         SHA256 sha256 = new SHA256();
         try {
-            System.out.println("=====================회원 탈퇴========================");
+            System.out.println("───────────────────회원 탈퇴───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
             
@@ -248,12 +248,12 @@ public class MemberController implements IMemberService {
 		}
 	}
 	private void menu() {
-        System.out.println("=====================회원 관리========================");
+        System.out.println("───────────────────회원 관리───────────────────");
         System.out.println("1. 회원정보 조회");
         System.out.println("2. 회원정보 수정");
         System.out.println("3. 회원탈퇴");
         System.out.println("4. 돌아가기");
-        System.out.println("======================================================");
+        System.out.println("───────────────────────────────────────────────");
         System.out.println();
     }
 

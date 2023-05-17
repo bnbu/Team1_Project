@@ -144,7 +144,9 @@ public class TicketController implements ITicketService {
 		while (true) {
 			try {
 				System.out.print("영화의 번호를 입력 : ");
-				idx = Integer.parseInt(br.readLine());
+				str = br.readLine();
+				if (str.equalsIgnoreCase("q")) return;
+				idx = Integer.parseInt(str);
 
 				pstmtSearchScreeningInfo.setInt(1, idx);
 				rs = pstmtSearchScreeningInfo.executeQuery();
@@ -175,6 +177,8 @@ public class TicketController implements ITicketService {
 			try {
 				System.out.print("상영 정보의 번호를 입력 : ");
 				str = br.readLine();
+				if (str.equalsIgnoreCase("q")) return;
+				
 				pstmtSearchScreeiningByNo.setString(1, str);
 				rs = pstmtSearchScreeiningByNo.executeQuery();
 				
@@ -202,7 +206,9 @@ public class TicketController implements ITicketService {
 			try {
 				total = 0;
 				System.out.print("(청소년, 일반, 우대) 순으로 입력해주세요 : ");
-				StringTokenizer st = new StringTokenizer(br.readLine());
+				String input = br.readLine();
+				if (input.equalsIgnoreCase("q")) return;
+				StringTokenizer st = new StringTokenizer(input);
 				for (int i = 0; i < 3; i++) {
 					age[i] = Integer.parseInt(st.nextToken());
 					total += age[i];
@@ -239,7 +245,9 @@ public class TicketController implements ITicketService {
 				System.out.printf("%d개의 좌석을 선택해주세요 : ", total);
 				
 				// 좌석 입력 후 올바른 좌석형식인지 검사
-				StringTokenizer st = new StringTokenizer(br.readLine());
+				String input = br.readLine();
+				if (input.equalsIgnoreCase("q")) return;
+				StringTokenizer st = new StringTokenizer(input);
 				boolean isClear = true;
 				
 				for (int i = 0; i < total; i++) {
