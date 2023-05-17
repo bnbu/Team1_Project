@@ -12,6 +12,7 @@ public interface IMemberService {
 	void logout();
 	
 	void myProfile() throws SQLException, IOException;
-  void editProfile() throws IOException;
-  void removeMember() throws IOException;
+    void editProfile() throws IOException;
+    void removeMember() throws IOException;
+    void memberMenu() throws NumberFormatException, IOException;
 }
