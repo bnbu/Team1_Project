@@ -34,6 +34,10 @@ public class MainController {
 	}
 	
 	public void menu() {
-		ts.showScreens();
+		try {
+			ts.ticketHistory("test");
+		} catch (Exception e) { e.printStackTrace();
+		}
+		
 	}
 }
