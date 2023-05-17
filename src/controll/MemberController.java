@@ -141,8 +141,6 @@ public class MemberController implements IMemberService {
     @Override
     public void editProfile() throws IOException {
         SHA256 sha256 = new SHA256();
-        
-        
         try {
             System.out.println("===================회원정보 수정======================");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
@@ -181,7 +179,6 @@ public class MemberController implements IMemberService {
     @Override
     public void removeMember() throws IOException {
         SHA256 sha256 = new SHA256();
-       
         try {
             System.out.println("=====================회원 탈퇴========================");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");

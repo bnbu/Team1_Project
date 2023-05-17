@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 
 import service.IMemberService;
 import service.ITicketService;
+import util.LoginManager;
 
 public class MainController { 
     private IMemberService ms;
@@ -25,7 +26,12 @@ public class MainController {
     
     public void menu() throws Exception {
         // 로그인
-        ms.login();
+        LoginManager lm = new LoginManager();
+        lm.loginUser(ms.login());
+        while(lm.getLoginUser()==null) {
+            lm.loginUser(ms.login());
+        }
+        
         while(true) {
             mainMenu();
             int select = Integer.parseInt(br.readLine());
