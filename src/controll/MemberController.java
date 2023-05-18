@@ -152,10 +152,11 @@ public class MemberController implements IMemberService {
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
             
-            pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
-            pstmtSelectMember.setString(1, vo.getMember_id());
-            pstmtSelectMember.setString(2, pwd);
-            ResultSet rs = pstmtSelectMember.executeQuery();
+            pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
+            pstmtSelectMemberValid.setString(1, vo.getMember_id());
+            pstmtSelectMemberValid.setString(2, pwd);
+            pstmtSelectMemberValid.setInt(3, 1);
+            ResultSet rs = pstmtSelectMemberValid.executeQuery();
             if(!rs.isBeforeFirst()) {
                 System.out.println("비밀번호가 틀렸습니다.");
                 return;
