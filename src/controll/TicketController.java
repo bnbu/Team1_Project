@@ -3,32 +3,39 @@ package controll;
 import java.io.*;
 import java.sql.*;
 import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import oracle.jdbc.logging.annotations.StringBlinder;
 import service.ITicketService;
 import util.ConnectionSingletonHelper;
 
 public class TicketController implements ITicketService {
-    private static Connection conn;
+	private static Connection conn;
 	private BufferedReader br;
 	private PreparedStatement pstmtTotalMovie, pstmtTotalScreeningInfo, pstmtInsertTicket, pstmtCancelTicket,
 	pstmtSearchTicketInfo, pstmtSearchSeatInfo, pstmtSearchScreeningInfo, pstmtSearchTheaterInfo, pstmtSearchTicketInfoByNo,
-	pstmtSearchValidTicketInfo, pstmtSearchScreeiningByNo, pstmtInsertSeat, pstmtSearchTicketDesc;
+	pstmtSearchValidTicketInfo, pstmtSearchScreeiningByNo, pstmtInsertSeat, pstmtSearchTicketDesc, pstmtSeatNo, pstmtTicketInfoByNo;
 	private final String sqlTotalMovie = "SELECT * FROM MOVIE",
 			sqlTotalScreeningInfo = "SELECT SI.SCREENINFO_NO, M.MOVIE_TITLE, TO_CHAR(SI.SCREEN_DATE, 'YYYY-MM-DD'), SI.THEATER_NO, TO_CHAR(SI.MOVIE_START, 'HH24:MI'), TO_CHAR(SI.MOVIE_END, 'HH24:MI') FROM SCREENING_INFO SI, MOVIE M WHERE SI.MOVIE_NO = M.MOVIE_NO ORDER BY M.MOVIE_TITLE, SI.SCREEN_DATE, SI.MOVIE_START",
 			sqlCancelTicket = "UPDATE TICKETING SET CANCLE_DATE = SYSDATE, VALID = 0 WHERE TICKET_NO = ?",
-			sqlSearchTicketInfo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD'), M.MOVIE_TITLE, TI.VALID FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.MEMBER_ID = ?",
+			sqlSearchTicketInfo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE, TI.VALID FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.MEMBER_ID = ?",
 			sqlInsertTicket = "INSERT INTO TICKETING VALUES (TO_CHAR(SYSDATE, 'YYMMDD')||?||TICKETING_SEQ.NEXTVAL, ?, ?, ?, ?, ?, NULL, 1)",
 			sqlSearchSeatInfo = "SELECT * FROM SEAT_INFO SI JOIN TICKETING T ON SI.TICKET_NO = T.TICKET_NO WHERE T.VALID = 1 AND SI.SCREENINFO_NO = ?",
 			sqlSearchScreeningInfo = "SELECT SCREENINFO_NO, MOVIE_NO, THEATER_NO, TO_CHAR(MOVIE_START, 'HH24:MI'), TO_CHAR(MOVIE_END, 'HH24:MI'), TO_CHAR(SCREEN_DATE, 'YYYY-MM-DD') FROM SCREENING_INFO WHERE MOVIE_NO = ?",
 			sqlSearchTheaterInfo = "SELECT SEAT_ROW, SEAT_COL FROM THEATER WHERE THEATER_NO = ?",
-			sqlSearchValidTicketInfo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE,'999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD'), M.MOVIE_TITLE FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.MEMBER_ID = ? AND VALID = 1",
+			sqlSearchValidTicketInfo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE,'999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.MEMBER_ID = ? AND VALID = 1",
 			sqlSearchTicketInfoByNo = "SELECT COUNT(*) FROM TICKETING WHERE TICKET_NO = ?",
 			sqlSearchSreeningByNo = "SELECT * FROM SCREENING_INFO WHERE SCREENINFO_NO = ?",
 			sqlInsertSeat = "INSERT INTO SEAT_INFO VALUES (?, ?, ?)",
-			sqlSearchTicketDesc = "SELECT * FROM TICKETING WHERE MEMBER_ID = ? ORDER BY TICKET_DATE DESC";
-			
+			sqlSearchTicketDesc = "SELECT * FROM TICKETING WHERE MEMBER_ID = ? ORDER BY TICKET_DATE DESC",
+			sqlSeatNo = "SELECT SEAT_NO FROM SEAT_INFO WHERE TICKET_NO = ?",
+			sqlTicketInfoByNo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE, TI.VALID FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.TICKET_NO = ?";
+
+
+
 	private ResultSet rs;
 	private ResultSetMetaData rsmd ;
 	public TicketController() throws Exception {
@@ -48,6 +55,8 @@ public class TicketController implements ITicketService {
 			pstmtSearchScreeiningByNo = conn.prepareStatement(sqlSearchSreeningByNo);
 			pstmtInsertSeat = conn.prepareStatement(sqlInsertSeat);
 			pstmtSearchTicketDesc = conn.prepareStatement(sqlSearchTicketDesc);
+			pstmtSeatNo = conn.prepareStatement(sqlSeatNo);
+			pstmtTicketInfoByNo = conn.prepareStatement(sqlTicketInfoByNo);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -95,7 +104,7 @@ public class TicketController implements ITicketService {
 		}
 
 		boolean[][] chk = new boolean[rows][cols];
-//		for (int i = 0; i < 10; i++) chk[(int)(Math.random() * rows)][(int)(Math.random() * cols)] = true;
+		//		for (int i = 0; i < 10; i++) chk[(int)(Math.random() * rows)][(int)(Math.random() * cols)] = true;
 		try {
 			while (rs.next()) {
 				String str = rs.getString(1).toUpperCase();
@@ -130,7 +139,7 @@ public class TicketController implements ITicketService {
 		for (int i = 0; i < cols / 5; i++)
 			System.out.print("┴────────────────────");
 		System.out.println("───┘");
-		
+
 		return chk;
 	}
 
@@ -157,17 +166,17 @@ public class TicketController implements ITicketService {
 			}
 		}
 		System.out.println();
-		
+
 		// 1.선택한 영화로 상영정보를 가져온다
 		try {
-			System.out.println(String.format("%-8s│%-4s│%-20s│%-10s│%-10s", 
+			System.out.println(String.format("%-8s│%-4s│%-14s│%-10s│%-10s", 
 					"번호", "상영관", "날짜", "시작", "종료"));
-			System.out.println("──────────┼───────┼──────────────────────┼────────────┼────────────────────────────");
+			System.out.println("──────────┼───────┼────────────────┼────────────┼────────────────────────────");
 			while (rs.next()) {
-				System.out.println(String.format("%-10s│%-7s│%-22s│%-12s│%-12s",
+				System.out.println(String.format("%-10s│%-7s│%-16s│%-12s│%-12s",
 						rs.getString(1), rs.getString(3), rs.getString(6), rs.getString(4), rs.getString(5)));
 			}
-			System.out.println("──────────┴───────┴──────────────────────┴────────────┴────────────────────────────");
+			System.out.println("──────────┴───────┴────────────────┴────────────┴────────────────────────────");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -179,16 +188,16 @@ public class TicketController implements ITicketService {
 				System.out.print("상영 정보의 번호를 입력 : ");
 				str = br.readLine();
 				if (str.equalsIgnoreCase("q")) return;
-				
+
 				pstmtSearchScreeiningByNo.setString(1, str);
 				rs = pstmtSearchScreeiningByNo.executeQuery();
-				
+
 				if (!rs.next()) {
 					System.out.println("없는 상영 정보입니다, 다시 확인해주세요\n");
 					continue; 
 				}
-				
-				
+
+
 				pstmtSearchSeatInfo.setString(1, str);
 				rs = pstmtSearchScreeningInfo.executeQuery();
 				break;
@@ -221,7 +230,7 @@ public class TicketController implements ITicketService {
 				System.out.println("잘못된 입력입니다\n");
 			}
 		}
-		
+
 		// 4. 상영정보번호로 존재하는 좌석을 가져와서, 좌석의 여부를 알려줌
 		int theaterNum = -1;
 		try {
@@ -246,13 +255,13 @@ public class TicketController implements ITicketService {
 			try {
 				System.out.println("좌석은 (열행)순으로 입력해주세요 ex) A1 D15");
 				System.out.printf("%d개의 좌석을 선택해주세요 : ", total);
-				
+
 				// 좌석 입력 후 올바른 좌석형식인지 검사
 				String input = br.readLine();
 				if (input.equalsIgnoreCase("q")) return;
 				StringTokenizer st = new StringTokenizer(input);
 				boolean isClear = true;
-				
+
 				for (int i = 0; i < total; i++) {
 					selected[i] = st.nextToken().toUpperCase();
 					isClear &= Pattern.matches("[a-zA-Z][0-9]+", selected[i]);
@@ -261,7 +270,7 @@ public class TicketController implements ITicketService {
 					System.out.println("올바르지 않은 형식입니다, 다시 선택해주세요\n");
 					continue;
 				}
-				
+
 				for (String s : selected) 
 					isClear &= !seat[s.charAt(0) - 'A'][Integer.parseInt(s.substring(1)) - 1];
 				if (!isClear) {
@@ -283,12 +292,12 @@ public class TicketController implements ITicketService {
 			pstmtInsertTicket.setInt(5, age[0]*12000 + age[1]*14000 + age[2]*5000);
 			pstmtInsertTicket.setDate(6, (java.sql.Date) new Date(System.currentTimeMillis()));
 			pstmtInsertTicket.executeQuery();
-			
+
 			pstmtSearchTicketDesc.setString(1, id);
 			rs = pstmtSearchTicketDesc.executeQuery();
 			rs.next();
 			String ticket = rs.getString(1);
-			
+
 			for (String s : selected) {
 				pstmtInsertSeat.setString(1, s);
 				pstmtInsertSeat.setString(2, str);
@@ -320,23 +329,34 @@ public class TicketController implements ITicketService {
 			pstmtSearchTicketInfo.setString(1, ID);
 			rs = pstmtSearchTicketInfo.executeQuery();
 			rsmd = rs.getMetaData(); // 해당 테이블에 대한 정보
-			
-			System.out.println("──────────┬──────────┬────────┬─────────────┬────────────┬────────────┬────────────────────────────────────────────────");
-			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-8s│%-8s│%-60s\n","예매번호", "상영번호", "인원", "가격","예매 날짜", "취소 날짜", "제목");
-			System.out.println("──────────┼──────────┼────────┼─────────────┼────────────┼────────────┼────────────────────────────────────────────────");
+
+			System.out.println("──────────┬──────────┬────────┬─────────────┬──────────────────┬──────────────────┬────────────────────────────────────────────────");
+			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-14s│%-14s│%-60s\n","예매번호", "상영번호", "인원", "가격","예매 날짜", "취소 날짜", "제목");
+			System.out.println("──────────┼──────────┼────────┼─────────────┼──────────────────┼──────────────────┼────────────────────────────────────────────────");
 
 			while( rs.next() ) {
 				int valid = rs.getInt(8);
 				switch ( valid  ) {
 				case 0: // 취소
-					System.out.printf("%-10s│%-10s│%-8s│%-12s│%-12s│%-12s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6), rs.getString(7));
+					System.out.printf("%-10s│%-10s│%-8s│%-12s│%-18s│%-18s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6), rs.getString(7));
 					break;
 				case 1: //
-					System.out.printf("%-10s│%-10s│%-8s│%-12s│%-12s│            │%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(7));
+					System.out.printf("%-10s│%-10s│%-8s│%-12s│%-18s│                  │%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(7));
 					break;
 				} // end switch
-			} System.out.println("──────────┴──────────┴────────┴─────────────┴────────────┴────────────┴────────────────────────────────────────────────");
+			} System.out.println("──────────┴──────────┴────────┴─────────────┴──────────────────┴──────────────────┴────────────────────────────────────────────────");
 			// end while
+
+			while( true ) {
+				System.out.print("돌아가기 : q\n상세내역을 확인할 예매번호를 입력해주세요 : ");
+				String TicketNo = br.readLine();
+				if ( TicketNo.equalsIgnoreCase("q") ) return;
+
+				if ( ticketingDetail(TicketNo) ) {
+					break;
+				}
+			}
+
 		} catch (Exception e) { e.printStackTrace(); }
 	} // end ticketHistory
 
@@ -346,15 +366,15 @@ public class TicketController implements ITicketService {
 			pstmtSearchValidTicketInfo.setString(1, ID);
 			rs = pstmtSearchValidTicketInfo.executeQuery();
 			rsmd = rs.getMetaData(); // 해당 테이블에 대한 정보
-			
-			System.out.println("──────────┬──────────┬────────┬─────────────┬────────────┬────────────────────────────────────────────────");
-			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-8s│%-60s\n","예매번호", "상영번호", "인원", "가격", "예매 날짜", "제목");
-			System.out.println("──────────┼──────────┼────────┼─────────────┼────────────┼────────────────────────────────────────────────");
 
+			System.out.println("──────────┬──────────┬────────┬─────────────┬──────────────────┬────────────────────────────────────────────────");
+			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-14s│%-60s\n","예매번호", "상영번호", "인원", "가격", "예매 날짜", "제목");
+			System.out.println("──────────┼──────────┼────────┼─────────────┼────────────┼────────────────────────────────────────────────");
 			while( rs.next() ) {
-				System.out.printf("%-10s│%-10s│%-8s│%-12s│%-12s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6));
+				System.out.printf("%-10s│%-10s│%-8s│%-12s│%-18s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6));
 			};
-			System.out.println("──────────┴──────────┴────────┴─────────────┴────────────┴────────────────────────────────────────────────");
+			System.out.println("──────────┴──────────┴────────┴─────────────┴──────────────────┴────────────────────────────────────────────────");
+
 
 		} catch (SQLException e) { e.printStackTrace(); }
 		// 2. 취소하고자 하는 예매 정보를 선택
@@ -366,9 +386,9 @@ public class TicketController implements ITicketService {
 				try {
 					System.out.print("취소할 예매번호를 입력해주세요 : ");
 					TicketNo = br.readLine();
-					
+
 					if ( TicketNo.equalsIgnoreCase("q") ) return;
-						
+
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -377,20 +397,114 @@ public class TicketController implements ITicketService {
 				pstmtSearchTicketInfoByNo.setString(1, TicketNo);
 				rs = pstmtSearchTicketInfoByNo.executeQuery();
 				rs.next();
+				
+				pstmtSearchTicketInfo.setString(1, ID);
+				ResultSet rs2 = pstmtSearchTicketInfo.executeQuery();
+				rs2.next();
+				
 
 				if ( rs.getInt(1) == 0 ) {
 					System.out.println("입력하신 예매번호를 조회할수 없습니다. 다시 한번 확인해주시길 바랍니다.");
 					continue;
 				}
-			
-
-				pstmtCancelTicket.setString(1, TicketNo);
-				pstmtCancelTicket.executeUpdate();
-				break;
+				
+				SimpleDateFormat sdp = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+				java.util.Date getdate;
+				try {
+					getdate = sdp.parse(rs2.getString(5));
+					
+					if ( getdate.before(new Date(System.currentTimeMillis()))  ) {
+						System.out.println("관람이 완료된 표입니다.");
+						
+					} else System.out.println("False");
+					
+					pstmtCancelTicket.setString(1, TicketNo);
+					pstmtCancelTicket.executeUpdate();
+					
+					break;
+					
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 			} while( true );
 			System.out.println("취소되었습니다.");
 		} catch (SQLException e) { e.printStackTrace(); }
+	}
+
+	public boolean ticketingDetail(String TicketNo) {
+
+		try {
+			pstmtTicketInfoByNo.setString(1, TicketNo);
+			rs = pstmtTicketInfoByNo.executeQuery();
+			pstmtSeatNo.setString(1, TicketNo);
+			ResultSet rs2 = pstmtSeatNo.executeQuery();
+			if ( !rs.isBeforeFirst() ) return false;
+			rsmd = rs.getMetaData();
+			rs.next();
+			int valid = rs.getInt(8);
+
+			if ( valid == 1 ) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("──────────┬──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "예매번호", rs.getString(1))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "상영번호", rs.getString(2))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-8s│%s", "제목", rs.getString(7))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-8s│%s", "인원", rs.getString(3))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-8s│", "좌석"));
+
+				while(rs2.next()) {
+					sb.append(rs2.getString(1)).append(", ");
+				}
+				sb.setLength(sb.length()-2);
+
+				sb.append("\n");
+				sb.append("──────────┴──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-8s│%s", "가격", rs.getString(4).trim())).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "예매 날짜", rs.getString(5))).append("\n");
+				sb.append("──────────┴──────────────────────────────────────────").append("\n");
+
+				System.out.println(sb);
+			} else {
+				StringBuilder sb = new StringBuilder();
+				sb.append("──────────┬──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "예매번호", rs.getString(1))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "상영번호", rs.getString(2))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-8s│%s", "제목", rs.getString(7))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-8s│%s", "인원", rs.getString(3))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-8s│", "좌석"));
+
+				while(rs2.next()) {
+					sb.append(rs2.getString(1)).append(", ");
+				}
+				sb.setLength(sb.length()-2);
+
+				sb.append("\n");
+				sb.append("──────────┴──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-8s│%s", "가격", rs.getString(4).trim())).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "예매 날짜", rs.getString(5))).append("\n");
+				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "취소 날짜", rs.getString(6))).append("\n");
+				sb.append("──────────┴──────────────────────────────────────────").append("\n");
+
+				System.out.println(sb);
+			}
+
+
+		} catch (Exception e) { e.printStackTrace();
+		}
+		return true;
 	}
 
 	public void showScreens() {
@@ -414,6 +528,25 @@ public class TicketController implements ITicketService {
 			e.printStackTrace();
 		}
 	}
-
+	
+	@Override
+	public void AllClose() {
+		ConnectionSingletonHelper.close(pstmtTotalMovie);
+		ConnectionSingletonHelper.close(pstmtTotalScreeningInfo);
+		ConnectionSingletonHelper.close(pstmtInsertTicket);
+		ConnectionSingletonHelper.close(pstmtCancelTicket);
+		ConnectionSingletonHelper.close(pstmtSearchTicketInfo);
+		ConnectionSingletonHelper.close(pstmtSearchSeatInfo);
+		ConnectionSingletonHelper.close(pstmtSearchScreeningInfo);
+		ConnectionSingletonHelper.close(pstmtSearchTheaterInfo);
+		ConnectionSingletonHelper.close(pstmtSearchTicketInfoByNo);
+		ConnectionSingletonHelper.close(pstmtSearchValidTicketInfo);
+		ConnectionSingletonHelper.close(pstmtSearchScreeiningByNo);
+		ConnectionSingletonHelper.close(pstmtInsertSeat);
+		ConnectionSingletonHelper.close(pstmtSearchTicketDesc);
+		ConnectionSingletonHelper.close(pstmtSeatNo);
+		ConnectionSingletonHelper.close(pstmtTicketInfoByNo);
+	}
 }
+	
 

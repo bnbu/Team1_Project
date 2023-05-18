@@ -47,7 +47,9 @@ public class MainController {
                 case 6: lm.loginUser(ms.logout());;
                     break; // 로그아웃
                 case 0: 
-                    /* close(); */System.out.println("시스템을 종료합니다."); 
+                	ms.AllClose(); ts.AllClose();
+                    /* close(); */System.out.println("시스템을 종료합니다.");
+                    
                     System.exit(0);; // 시스템 종료
                 }
             }

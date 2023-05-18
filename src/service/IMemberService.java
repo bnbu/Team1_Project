@@ -17,4 +17,5 @@ public interface IMemberService {
     void loginMenu(LoginManager lm) throws NumberFormatException, IOException;
     void memberMenu(LoginManager lm) throws NumberFormatException, IOException;
     void removeMember(LoginManager lm) throws IOException;
+    void AllClose();
 }

@@ -133,7 +133,7 @@ public class MemberController implements IMemberService {
             sb.append("────────────────────┼────────┼────────────┼───────────").append("\n");
             while (rs.next()) {
                 int len1 = 20 - (rs.getString(1).length() - 1) / 3;
-                int len2 = 8 - (rs.getString(1).length() - 1) / 3;
+                int len2 = 8 - (rs.getString(1).length() - 1) / 3; //16 - getRankString(rs.getInt(6)).getBytes().length;
                 sb.append(String.format("%-" + len1 + "s│%-" + len2 + "s│%-12s│%-8s", rs.getString(1), rs.getString(2),
                         rs.getString(3), sdf.format(rs.getDate(4)))).append("\n");
                 sb.append("────────────────────┴────────┴────────────┴───────────").append("\n");
@@ -329,5 +329,14 @@ public class MemberController implements IMemberService {
                 return;
             } // switch end
         } // while end
+    }
+    @Override
+	public void AllClose() {
+    	ConnectionSingletonHelper.close(pstmtInsertMember);
+    	ConnectionSingletonHelper.close(pstmtSelectMemberValid);
+    	ConnectionSingletonHelper.close(pstmtUpdateMemberLoginInfo);
+    	ConnectionSingletonHelper.close(pstmtSelectMember);
+    	ConnectionSingletonHelper.close(pstmtUpdateMember);
+    	ConnectionSingletonHelper.close(pstmtDeleteMember);
     }
 }

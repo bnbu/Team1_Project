@@ -41,8 +41,39 @@ public class ConnectionSingletonHelper {
 //		}
 //	}
 	
-	public static void menuHelp() {
-		System.out.println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=JDBC Query=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
-		System.out.println("0. rollback \t 1. 전체목록\t 2. 삽입\t\t 3. 수정\n4. 삭제\t\t 5. 조건 검색\t 6. 종료\t\t 9. commit");
+		public static void close(Connection conn) {
+			if( conn != null)
+				try {
+					conn.close();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+		}
+		
+		public static void close(Statement stmt) {
+			if( stmt != null)
+				try {
+					stmt.close();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+		}
+		
+		public static void close(PreparedStatement pstmt) {
+			if( pstmt != null)
+				try {
+					pstmt.close();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+		}
+		
+		public static void close(ResultSet rs) {
+			if( rs != null)
+				try {
+					rs.close();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+		}
 	}
-}
