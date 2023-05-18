@@ -21,20 +21,20 @@ public class TicketController implements ITicketService {
 	pstmtSearchMovie, pstmtSearchSeatValid;
 	
 	private final String sqlTotalMovie = "SELECT * FROM MOVIE",
-			sqlTotalScreeningInfo = "SELECT SI.SCREENINFO_NO, M.MOVIE_TITLE, TO_CHAR(SI.SCREEN_DATE, 'YYYY-MM-DD'), SI.THEATER_NO, TO_CHAR(SI.MOVIE_START, 'HH24:MI'), TO_CHAR(SI.MOVIE_END, 'HH24:MI') FROM SCREENING_INFO SI, MOVIE M WHERE SI.MOVIE_NO = M.MOVIE_NO ORDER BY M.MOVIE_TITLE, SI.SCREEN_DATE, SI.MOVIE_START",
+			sqlTotalScreeningInfo = "SELECT SI.SCREENINFO_NO, M.MOVIE_TITLE, TO_CHAR(SI.SCREEN_DATE, 'YYYY-MM-DD'), SI.THEATER_NO, TO_CHAR(SI.MOVIE_START, 'HH24:MI'), TO_CHAR(SI.MOVIE_END, 'HH24:MI') FROM SCREENING_INFO SI, MOVIE M WHERE SI.MOVIE_NO = M.MOVIE_NO AND SI.MOVIE_START > SYSDATE ORDER BY M.MOVIE_TITLE, SI.SCREEN_DATE, SI.MOVIE_START ",
 			sqlCancelTicket = "UPDATE TICKETING SET CANCLE_DATE = SYSDATE, VALID = 0 WHERE TICKET_NO = ?",
 			sqlSearchTicketInfo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE, TI.VALID FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.MEMBER_ID = ?",
 			sqlInsertTicket = "INSERT INTO TICKETING VALUES (TO_CHAR(SYSDATE, 'YYMMDD')||?||TICKETING_SEQ.NEXTVAL, ?, ?, ?, ?, ?, NULL, 1)",
 			sqlSearchSeatInfo = "SELECT * FROM SEAT_INFO SI JOIN TICKETING T ON SI.TICKET_NO = T.TICKET_NO WHERE T.VALID = 1 AND SI.SCREENINFO_NO = ?",
-			sqlSearchScreeningInfo = "SELECT SCREENINFO_NO, MOVIE_NO, THEATER_NO, TO_CHAR(MOVIE_START, 'HH24:MI'), TO_CHAR(MOVIE_END, 'HH24:MI'), TO_CHAR(SCREEN_DATE, 'YYYY-MM-DD') FROM SCREENING_INFO WHERE MOVIE_NO = ?",
+			sqlSearchScreeningInfo = "SELECT SCREENINFO_NO, MOVIE_NO, THEATER_NO, TO_CHAR(MOVIE_START, 'HH24:MI'), TO_CHAR(MOVIE_END, 'HH24:MI'), TO_CHAR(SCREEN_DATE, 'YYYY-MM-DD') FROM SCREENING_INFO WHERE MOVIE_NO = ? AND MOVIE_START > SYSDATE",
 			sqlSearchTheaterInfo = "SELECT SEAT_ROW, SEAT_COL FROM THEATER WHERE THEATER_NO = ?",
 			sqlSearchValidTicketInfo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE,'999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.MEMBER_ID = ? AND VALID = 1",
 			sqlSearchTicketInfoByNo = "SELECT COUNT(*) FROM TICKETING WHERE TICKET_NO = ?",
-			sqlSearchSreeningByNo = "SELECT * FROM SCREENING_INFO WHERE SCREENINFO_NO = ?",
+			sqlSearchSreeningByNo = "SELECT * FROM SCREENING_INFO WHERE SCREENINFO_NO = ? AND MOVIE_START > SYSDATE",
 			sqlInsertSeat = "INSERT INTO SEAT_INFO VALUES (?, ?, ?)",
 			sqlSearchTicketDesc = "SELECT * FROM TICKETING WHERE MEMBER_ID = ? ORDER BY TICKET_DATE DESC",
 			sqlSeatNo = "SELECT SEAT_NO FROM SEAT_INFO WHERE TICKET_NO = ?",
-			sqlTicketInfoByNo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE, TI.VALID FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.TICKET_NO = ?",
+			sqlTicketInfoByNo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE, TI.VALID, TO_CHAR(SI.MOVIE_START, 'YYYY-MM-DD HH24:MI') FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.TICKET_NO = ?",
 			sqlSearchMovie = "SELECT COUNT(*) FROM MOVIE WHERE MOVIE_NO = ?",
 			sqlSearchSeatValid = "SELECT COUNT(*) FROM SEAT_INFO SI JOIN TICKETING T ON SI.TICKET_NO = T.TICKET_NO WHERE T.VALID = 1 AND SI.SEAT_NO = ? AND T.SCREENINFO_NO = ?";
 			
@@ -370,7 +370,6 @@ public class TicketController implements ITicketService {
 		try {
 			pstmtSearchTicketInfo.setString(1, ID);
 			rs = pstmtSearchTicketInfo.executeQuery();
-			rsmd = rs.getMetaData(); // 해당 테이블에 대한 정보
 
 			System.out.println("──────────┬──────────┬────────┬─────────────┬──────────────────┬──────────────────┬────────────────────────────────────────────────");
 			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-14s│%-14s│%-60s\n","예매번호", "상영번호", "인원", "가격","예매 날짜", "취소 날짜", "제목");
@@ -407,11 +406,10 @@ public class TicketController implements ITicketService {
 		try {
 			pstmtSearchValidTicketInfo.setString(1, ID);
 			rs = pstmtSearchValidTicketInfo.executeQuery();
-			rsmd = rs.getMetaData(); // 해당 테이블에 대한 정보
 
 			System.out.println("──────────┬──────────┬────────┬─────────────┬──────────────────┬────────────────────────────────────────────────");
 			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-14s│%-60s\n","예매번호", "상영번호", "인원", "가격", "예매 날짜", "제목");
-			System.out.println("──────────┼──────────┼────────┼─────────────┼────────────┼────────────────────────────────────────────────");
+			System.out.println("──────────┼──────────┼────────┼─────────────┼──────────────────┼────────────────────────────────────────────────");
 			while( rs.next() ) {
 				System.out.printf("%-10s│%-10s│%-8s│%-12s│%-18s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6));
 			};
@@ -440,8 +438,8 @@ public class TicketController implements ITicketService {
 				rs = pstmtSearchTicketInfoByNo.executeQuery();
 				rs.next();
 				
-				pstmtSearchTicketInfo.setString(1, ID);
-				ResultSet rs2 = pstmtSearchTicketInfo.executeQuery();
+				pstmtTicketInfoByNo.setString(1, TicketNo);
+				ResultSet rs2 = pstmtTicketInfoByNo.executeQuery();
 				rs2.next();
 				
 
@@ -453,13 +451,12 @@ public class TicketController implements ITicketService {
 				SimpleDateFormat sdp = new SimpleDateFormat("yyyy-MM-dd hh:mm");
 				java.util.Date getdate;
 				try {
-					getdate = sdp.parse(rs2.getString(5));
+					getdate = sdp.parse(rs2.getString(9));
 					
-					if ( getdate.before(new Date(System.currentTimeMillis()))  ) {
+					if ( getdate.before(new Date(System.currentTimeMillis()))  ) { // true getdate가 현재시간보다 이전
 						System.out.println("관람이 완료된 표입니다.");
-						
-					} else System.out.println("False");
-					
+						return;
+					}
 					pstmtCancelTicket.setString(1, TicketNo);
 					pstmtCancelTicket.executeUpdate();
 					
@@ -482,21 +479,20 @@ public class TicketController implements ITicketService {
 			pstmtSeatNo.setString(1, TicketNo);
 			ResultSet rs2 = pstmtSeatNo.executeQuery();
 			if ( !rs.isBeforeFirst() ) return false;
-			rsmd = rs.getMetaData();
 			rs.next();
 			int valid = rs.getInt(8);
 
 			if ( valid == 1 ) {
 				StringBuilder sb = new StringBuilder();
-				sb.append("──────────┬──────────────────────────────────────────").append("\n");
+				sb.append("──────────┬──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-6s│%s", "예매번호", rs.getString(1))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-6s│%s", "상영번호", rs.getString(2))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "제목", rs.getString(7))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "인원", rs.getString(3))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│", "좌석"));
 
 				while(rs2.next()) {
@@ -505,24 +501,24 @@ public class TicketController implements ITicketService {
 				sb.setLength(sb.length()-2);
 
 				sb.append("\n");
-				sb.append("──────────┴──────────────────────────────────────────").append("\n");
+				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "가격", rs.getString(4).trim())).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-6s│%s", "예매 날짜", rs.getString(5))).append("\n");
-				sb.append("──────────┴──────────────────────────────────────────").append("\n");
+				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
 
 				System.out.println(sb);
 			} else {
 				StringBuilder sb = new StringBuilder();
-				sb.append("──────────┬──────────────────────────────────────────").append("\n");
+				sb.append("──────────┬──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-6s│%s", "예매번호", rs.getString(1))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-6s│%s", "상영번호", rs.getString(2))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "제목", rs.getString(7))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "인원", rs.getString(3))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│", "좌석"));
 
 				while(rs2.next()) {
@@ -531,13 +527,13 @@ public class TicketController implements ITicketService {
 				sb.setLength(sb.length()-2);
 
 				sb.append("\n");
-				sb.append("──────────┴──────────────────────────────────────────").append("\n");
+				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "가격", rs.getString(4).trim())).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-6s│%s", "예매 날짜", rs.getString(5))).append("\n");
-				sb.append("──────────┼──────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-6s│%s", "취소 날짜", rs.getString(6))).append("\n");
-				sb.append("──────────┴──────────────────────────────────────────").append("\n");
+				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
 
 				System.out.println(sb);
 			}
