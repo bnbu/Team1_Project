@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import oracle.jdbc.logging.annotations.StringBlinder;
 import service.ITicketService;
 import util.ConnectionSingletonHelper;
 
@@ -370,7 +369,6 @@ public class TicketController implements ITicketService {
 		try {
 			pstmtSearchTicketInfo.setString(1, ID);
 			rs = pstmtSearchTicketInfo.executeQuery();
-			rsmd = rs.getMetaData(); // 해당 테이블에 대한 정보
 
 			System.out.println("──────────┬──────────┬────────┬─────────────┬──────────────────┬──────────────────┬────────────────────────────────────────────────");
 			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-14s│%-14s│%-60s\n","예매번호", "상영번호", "인원", "가격","예매 날짜", "취소 날짜", "제목");
@@ -407,7 +405,6 @@ public class TicketController implements ITicketService {
 		try {
 			pstmtSearchValidTicketInfo.setString(1, ID);
 			rs = pstmtSearchValidTicketInfo.executeQuery();
-			rsmd = rs.getMetaData(); // 해당 테이블에 대한 정보
 
 			System.out.println("──────────┬──────────┬────────┬─────────────┬──────────────────┬────────────────────────────────────────────────");
 			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-14s│%-60s\n","예매번호", "상영번호", "인원", "가격", "예매 날짜", "제목");
@@ -482,7 +479,6 @@ public class TicketController implements ITicketService {
 			pstmtSeatNo.setString(1, TicketNo);
 			ResultSet rs2 = pstmtSeatNo.executeQuery();
 			if ( !rs.isBeforeFirst() ) return false;
-			rsmd = rs.getMetaData();
 			rs.next();
 			int valid = rs.getInt(8);
 
