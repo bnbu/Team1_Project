@@ -162,7 +162,7 @@ public class TicketController implements ITicketService {
 		while (true) {
 			try {
 				System.out.print("영화의 번호를 입력 : ");
-				str = br.readLine();
+				str = br.readLine().trim();
 				if (str.equalsIgnoreCase("q")) return;
 				idx = Integer.parseInt(str);
 
@@ -203,7 +203,7 @@ public class TicketController implements ITicketService {
 		while (true) {
 			try {
 				System.out.print("상영 정보의 번호를 입력 : ");
-				str = br.readLine();
+				str = br.readLine().trim();
 				if (str.equalsIgnoreCase("q")) return;
 
 				pstmtSearchScreeiningByNo.setString(1, str);
@@ -233,7 +233,7 @@ public class TicketController implements ITicketService {
 			try {
 				total = 0;
 				System.out.print("(청소년 일반 우대) 순으로 입력해주세요 : ");
-				String input = br.readLine();
+				String input = br.readLine().trim();
 				if (input.equalsIgnoreCase("q")) return;
 				StringTokenizer st = new StringTokenizer(input);
 				for (int i = 0; i < 3; i++) {
@@ -284,7 +284,7 @@ public class TicketController implements ITicketService {
 						System.out.printf("%d개의 좌석을 선택해주세요 : ", total);
 						
 						// 좌석 입력 후 올바른 좌석형식인지 검사
-						String input = br.readLine();
+						String input = br.readLine().trim();
 						if (input.equalsIgnoreCase("q")) {
 							ConnectionSingletonHelper.getConnection().rollback();
 							ConnectionSingletonHelper.getConnection().setAutoCommit(true);
@@ -389,7 +389,7 @@ public class TicketController implements ITicketService {
 
 			while( true ) {
 				System.out.print("돌아가기 : q\n상세내역을 확인할 예매번호를 입력해주세요 : ");
-				String TicketNo = br.readLine();
+				String TicketNo = br.readLine().trim();
 				if ( TicketNo.equalsIgnoreCase("q") ) return;
 
 				if ( ticketingDetail(TicketNo) ) {
@@ -424,7 +424,7 @@ public class TicketController implements ITicketService {
 			do {
 				try {
 					System.out.print("취소할 예매번호를 입력해주세요 : ");
-					TicketNo = br.readLine();
+					TicketNo = br.readLine().trim();
 
 					if ( TicketNo.equalsIgnoreCase("q") ) return;
 
@@ -526,7 +526,7 @@ public class TicketController implements ITicketService {
 				sb.setLength(sb.length()-2);
 
 				sb.append("\n");
-				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
+				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "가격", rs.getString(4).trim())).append("\n");
 				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-6s│%s", "예매 날짜", rs.getString(5))).append("\n");

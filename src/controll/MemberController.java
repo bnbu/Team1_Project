@@ -377,27 +377,31 @@ public class MemberController implements IMemberService {
 	public void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts) throws NumberFormatException, IOException {
         while (true) {
             menu2();
-           
-            switch (Integer.parseInt(br.readLine())) {
-            case 1:
-                try {
-                    register();
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                break; // 회원가입
-            case 2:
-                lm.loginUser(login());
-                if(lm.getLoginUser()!=null)return;
-                break; // 로그인
-            case 3: System.out.println("시스템을 종료합니다.");
-             	ms.AllClose(); ts.AllClose();
-             	ConnectionSingletonHelper.close();
-                System.exit(0);
-                return;
-            } // switch end
+           try {
+        	   switch (Integer.parseInt(br.readLine())) {
+        	   case 1:
+        		   try {
+        			   register();
+        		   } catch (NoSuchAlgorithmException e) {
+        			   e.printStackTrace();
+        		   } catch (IOException e) {
+        			   e.printStackTrace();
+        		   }
+        		   break; // 회원가입
+        	   case 2:
+        		   lm.loginUser(login());
+        		   if(lm.getLoginUser()!=null)return;
+        		   break; // 로그인
+        	   case 3: System.out.println("시스템을 종료합니다.");
+        	   ms.AllClose(); ts.AllClose();
+        	   ConnectionSingletonHelper.close();
+        	   System.exit(0);
+        	   return;
+        	   } // switch end
+			
+		} catch (Exception e) {
+			System.out.println("잘못된 입력입니다.");
+		}
         } // while end
     }
 
