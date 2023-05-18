@@ -1,8 +1,8 @@
 package controll;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 import service.IMemberService;
 import service.ITicketService;
 import util.LoginManager;
@@ -13,6 +13,7 @@ public class MainController {
     private BufferedReader br;
     private StringBuilder sb;
     
+ 
     public MainController() {
         sb = new StringBuilder();
         br = new BufferedReader(new InputStreamReader(System.in));
