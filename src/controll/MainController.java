@@ -33,20 +33,25 @@ public class MainController {
             
             while(lm.getLoginUser()!=null) {
                 mainMenu();
-                int select = Integer.parseInt(br.readLine());
-                switch (select) {
-                case 1: ts.showScreens();
+                try {
+                	int select = Integer.parseInt(br.readLine());
+                	switch (select) {
+                	case 1: ts.showScreens();
                 	break; // 상영정보조회
-                case 2: ts.ticketing(lm.getLoginUser().getMember_id());
-                    break; // 예매
-                case 3: ts.ticketHistory(lm.getLoginUser().getMember_id());
-                    break; // 예매 내역
-                case 4: ts.ticketingCancel(lm.getLoginUser().getMember_id());
+                	case 2: ts.ticketing(lm.getLoginUser().getMember_id());
+                	break; // 예매
+                	case 3: ts.ticketHistory(lm.getLoginUser().getMember_id());
+                	break; // 예매 내역
+                	case 4: ts.ticketingCancel(lm.getLoginUser().getMember_id());
                 	break; // 예매 취소
-                case 5: ms.memberMenu(lm);
-                    break; // 회원정보 관리
-                case 6: lm.loginUser(ms.logout());
-                    break; // 로그아웃
+                	case 5: ms.memberMenu(lm);
+                	break; // 회원정보 관리
+                	case 6: lm.loginUser(ms.logout());
+                	break; // 로그아웃
+                	}
+                }
+                catch (Exception e) {
+                	System.out.println("잘못된 입력입니다");
                 }
             }
         }
