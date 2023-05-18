@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import model.MemberVO;
@@ -39,18 +40,86 @@ public class MemberController implements IMemberService {
     @Override
     public void register() throws IOException, NoSuchAlgorithmException {
       SHA256 sha256 = new SHA256();
-      try {
-        System.out.print("ID: ");
-        String member_Id = br.readLine();
-        System.out.print("PassWord: ");
-        String member_Pwd = br.readLine();
-        System.out.print("Member Name: ");
-        String member_Name = br.readLine();
-        System.out.print("Member Phone: ");
-        String member_Phone = br.readLine();
-        System.out.print("Member Birthday: ");
-        String member_Birthday = br.readLine();
-
+      	try {
+      		
+      		System.out.println("영문자와 숫자를 조합하여 5자이상 19자 이하로 입력하십시오");
+       		System.out.print("ID: ");
+       		String member_Id = null;
+	        while(true) {
+	        	
+	        	member_Id = br.readLine();
+			    String mid = "^[a-z]+[a-z0-9]{5,19}$";
+			    boolean account = Pattern.matches(mid, member_Id);
+			    	
+			    if (!account) {
+		            System.out.println("잘못된 입령양식 입니다. 다시입력하십시오");
+				    System.out.print("ID: ");
+				    continue;
+				}
+			break;
+			}
+        
+		    System.out.println("최소 8 자, 하나 이상의 문자와 하나의 숫자,특수문자 !,@,$,!,%,*,#,^,?,& 를 이용하여  입력하십시오");
+	        System.out.print("PassWord: ");
+	        String member_Pwd = null;//최소 8 자, 하나 이상의 문자와 하나의 숫자,
+	        while(true) {
+	        	member_Pwd = br.readLine();
+		        String mpwd= "^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$";
+		        boolean password = Pattern.matches(mpwd, member_Pwd);
+		        
+		        if (!password) {
+		            System.out.println("잘못된 입령양식 입니다. 다시입력하십시오");
+		            System.out.print("PassWord: ");
+		            continue;
+		        }
+		        break;
+	        }
+        
+        System.out.print("Name: ");
+        String member_Name = null;
+        while(true) {
+        	member_Name = br.readLine();
+	        String mnf= "(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*$)";
+	        boolean nameformat = Pattern.matches(mnf, member_Name);
+	        
+	        if (!nameformat) {
+	            System.out.println("잘못된 이름형식 입니다.");
+	            System.out.print("Name: ");
+	            continue;
+	        }
+	        break;
+        }
+        
+        System.out.print("Phone: ");
+	    String member_Phone = null; 
+        while(true) {
+	       member_Phone = br.readLine();
+	        String mpho = "(\\d{2,3})(\\d{3,4})(\\d{4})";
+	        boolean phonenumber = Pattern.matches(mpho, member_Phone);
+	        
+	        if (!phonenumber) {
+	            System.out.println("잘못된 입령양식 입니다. 다시입력하십시오");
+	            System.out.print("Phone: ");
+	            continue;
+	        }
+        break;
+        }
+        
+        System.out.print("Birthday: ");
+        String member_Birthday = null;
+        while(true) {
+	        member_Birthday = br.readLine();
+	        String mbd = "([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))";
+	        boolean memberbirthday = Pattern.matches(mbd, member_Birthday);
+	        
+	        if (!memberbirthday) {
+	            System.out.println("잘못된 입령양식 입니다. 다시입력하십시오");
+	            System.out.print("Birthday: ");
+	            continue;
+	        }
+	        break;
+        }
+        
         pstmtInsertMember = conn.prepareStatement(sqlInsertMember);
         pstmtInsertMember.setString(1, member_Id);
         pstmtInsertMember.setString(2, member_Name);
