@@ -48,6 +48,8 @@ public class MainController {
                 	break; // 회원정보 관리
                 	case 6: lm.loginUser(ms.logout());
                 	break; // 로그아웃
+                	default: System.out.println("입력을 확인해주세요");
+                	break;
                 	}
                 }
                 catch (Exception e) {

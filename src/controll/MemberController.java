@@ -25,11 +25,12 @@ public class MemberController implements IMemberService {
     private StringBuilder sb;
     private SimpleDateFormat sdf;
     private MemberVO vo;
-    private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember;
+    private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember,pstmtSelectLikeByid;
     private final String sqlInsertMember = "INSERT INTO MEMBER (member_id, member_name, member_pwd, member_phone, member_birthday) VALUES(?,?,?,?,?)", 
             sqlSelectMemberValid = "SELECT MEMBER_ID,MEMBER_PWD,MEMBER_VALID FROM MEMBER WHERE MEMBER_ID=? AND MEMBER_PWD=? AND MEMBER_VALID=?",
             sqlUpdateMemberLoginInfo = "UPDATE MEMBER SET MEMBER_VALID= ? WHERE MEMBER_ID = ?",
             sqlSelectMember = "SELECT member_id, member_name,member_phone,member_birthday FROM MEMBER WHERE MEMBER_ID=?",
+            sqlSelectLikeByid = "select member_id from member where member_id like '%'||?||'%'",
             sqlUpdateMember = "UPDATE MEMBER SET MEMBER_NAME=?, MEMBER_PWD=?,MEMBER_PHONE=?,MEMBER_BIRTHDAY=? WHERE MEMBER_ID=?",
             sqlDeleteMember = "UPDATE MEMBER SET MEMBER_VALID=3 WHERE MEMBER_ID=?";
     
@@ -44,6 +45,7 @@ public class MemberController implements IMemberService {
         pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
         pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
         pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
+        pstmtSelectLikeByid = conn.prepareStatement(sqlSelectLikeByid);
     }
  
     @Override
@@ -62,6 +64,14 @@ public class MemberController implements IMemberService {
 			        System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
 				    continue;
 				}
+			    
+			    pstmtSelectLikeByid.setString(1, member_Id);
+                ResultSet rs = pstmtSelectLikeByid.executeQuery();
+                if(rs.isBeforeFirst()) {
+                    System.out.println("이미 존재하는 아이디입니다.");
+                    continue;
+                }
+                
 			    pstmtInsertMember.setString(1, member_Id);
 			    break;
 			}
@@ -143,20 +153,18 @@ public class MemberController implements IMemberService {
         			continue;
         		}
         		pstmtInsertMember.setString(5, member_Birthday);
-        		pstmtInsertMember.executeUpdate();
+        		
         		break;
         	}
         	catch (IOException e) {
-        		System.out.println("잘못된 입력입니다");
-        	}
-        	catch (SQLException e) {
-        		System.out.println("날짜를 다시 확인해주세요");
+        		System.out.println("잘못된 날짜 입력입니다");
         	}
         }
-      } catch (Exception e) {
-        e.printStackTrace();
+        pstmtInsertMember.executeUpdate();
+      } catch (SQLException e) {
+          System.out.println("다시 시도해주세요");
+          return;
       }
-      	
     }
 
     @Override
@@ -397,6 +405,8 @@ public class MemberController implements IMemberService {
         	   ConnectionSingletonHelper.close();
         	   System.exit(0);
         	   return;
+        	   default: System.out.println("입력을 확인해주세요.");
+        	   break;
         	   } // switch end
 			
 		} catch (Exception e) {
