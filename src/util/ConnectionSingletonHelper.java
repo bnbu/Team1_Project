@@ -14,7 +14,6 @@ public class ConnectionSingletonHelper {
 		Properties properties = new Properties();
         Reader reader = new FileReader("./src/lib/oracle.properties"); // 읽어올 파일 지정
         properties.load(reader);
-        
         String driverName = properties.getProperty("driver");
         String url = properties.getProperty("url");
         String user = properties.getProperty("user");

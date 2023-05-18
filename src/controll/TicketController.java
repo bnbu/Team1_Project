@@ -14,7 +14,7 @@ public class TicketController implements ITicketService {
 	private BufferedReader br;
 	private PreparedStatement pstmtTotalMovie, pstmtTotalScreeningInfo, pstmtInsertTicket, pstmtCancelTicket,
 	pstmtSearchTicketInfo, pstmtSearchSeatInfo, pstmtSearchScreeningInfo, pstmtSearchTheaterInfo, pstmtSearchTicketInfoByNo,
-	pstmtSearchValidTicketInfo, pstmtSearchScreeiningByNo, pstmtInsertSeat, pstmtSearchTicketDesc;
+	pstmtSearchValidTicketInfo, pstmtSearchScreeiningByNo, pstmtInsertSeat, pstmtSearchTicketDesc,pstmtDeleteSeat;
 	private final String sqlTotalMovie = "SELECT * FROM MOVIE",
 			sqlTotalScreeningInfo = "SELECT SI.SCREENINFO_NO, M.MOVIE_TITLE, TO_CHAR(SI.SCREEN_DATE, 'YYYY-MM-DD'), SI.THEATER_NO, TO_CHAR(SI.MOVIE_START, 'HH24:MI'), TO_CHAR(SI.MOVIE_END, 'HH24:MI') FROM SCREENING_INFO SI, MOVIE M WHERE SI.MOVIE_NO = M.MOVIE_NO ORDER BY M.MOVIE_TITLE, SI.SCREEN_DATE, SI.MOVIE_START",
 			sqlCancelTicket = "UPDATE TICKETING SET CANCLE_DATE = SYSDATE, VALID = 0 WHERE TICKET_NO = ?",
@@ -27,7 +27,8 @@ public class TicketController implements ITicketService {
 			sqlSearchTicketInfoByNo = "SELECT COUNT(*) FROM TICKETING WHERE TICKET_NO = ?",
 			sqlSearchSreeningByNo = "SELECT * FROM SCREENING_INFO WHERE SCREENINFO_NO = ?",
 			sqlInsertSeat = "INSERT INTO SEAT_INFO VALUES (?, ?, ?)",
-			sqlSearchTicketDesc = "SELECT * FROM TICKETING WHERE MEMBER_ID = ? ORDER BY TICKET_DATE DESC";
+			sqlSearchTicketDesc = "SELECT * FROM TICKETING WHERE MEMBER_ID = ? ORDER BY TICKET_DATE DESC",
+			sqlDeleteSeat = "DELETE FROM SEAT_INFO WHERE TICKET_NO = ?";
 			
 	private ResultSet rs;
 	private ResultSetMetaData rsmd ;
@@ -48,6 +49,7 @@ public class TicketController implements ITicketService {
 			pstmtSearchScreeiningByNo = conn.prepareStatement(sqlSearchSreeningByNo);
 			pstmtInsertSeat = conn.prepareStatement(sqlInsertSeat);
 			pstmtSearchTicketDesc = conn.prepareStatement(sqlSearchTicketDesc);
+			pstmtDeleteSeat = conn.prepareStatement(sqlDeleteSeat);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -140,11 +142,13 @@ public class TicketController implements ITicketService {
 		// 0. 영화를 선택
 		String str;
 		int idx = -1;
-
+		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
 				System.out.print("영화의 번호를 입력 : ");
-				idx = Integer.parseInt(br.readLine());
+				str = br.readLine();
+				if (str.equalsIgnoreCase("q")) return;
+				idx = Integer.parseInt(str);
 
 				pstmtSearchScreeningInfo.setInt(1, idx);
 				rs = pstmtSearchScreeningInfo.executeQuery();
@@ -171,10 +175,13 @@ public class TicketController implements ITicketService {
 		}
 
 		// 2. 상영정보를 선택
+		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
 				System.out.print("상영 정보의 번호를 입력 : ");
 				str = br.readLine();
+				if (str.equalsIgnoreCase("q")) return;
+				
 				pstmtSearchScreeiningByNo.setString(1, str);
 				rs = pstmtSearchScreeiningByNo.executeQuery();
 				
@@ -201,8 +208,10 @@ public class TicketController implements ITicketService {
 		while (true) {
 			try {
 				total = 0;
-				System.out.print("(청소년, 일반, 우대) 순으로 입력해주세요 : ");
-				StringTokenizer st = new StringTokenizer(br.readLine());
+				System.out.print("(청소년 일반 우대) 순으로 입력해주세요 : ");
+				String input = br.readLine();
+				if (input.equalsIgnoreCase("q")) return;
+				StringTokenizer st = new StringTokenizer(input);
 				for (int i = 0; i < 3; i++) {
 					age[i] = Integer.parseInt(st.nextToken());
 					total += age[i];
@@ -233,13 +242,16 @@ public class TicketController implements ITicketService {
 
 		// 5. 좌석을 인원수만큼 선택
 		String[] selected = new String[total];
+		System.out.println("메뉴로 돌아가기 : q");
 		while (true) {
 			try {
 				System.out.println("좌석은 (열행)순으로 입력해주세요 ex) A1 D15");
 				System.out.printf("%d개의 좌석을 선택해주세요 : ", total);
 				
 				// 좌석 입력 후 올바른 좌석형식인지 검사
-				StringTokenizer st = new StringTokenizer(br.readLine());
+				String input = br.readLine();
+				if (input.equalsIgnoreCase("q")) return;
+				StringTokenizer st = new StringTokenizer(input);
 				boolean isClear = true;
 				
 				for (int i = 0; i < total; i++) {
@@ -341,9 +353,7 @@ public class TicketController implements ITicketService {
 			System.out.println("──────────┼──────────┼────────┼─────────────┼────────────┼────────────────────────────────────────────────");
 
 			while( rs.next() ) {
-				
 				System.out.printf("%-10s│%-10s│%-8s│%-12s│%-12s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6));
-			
 			};
 			System.out.println("──────────┴──────────┴────────┴─────────────┴────────────┴────────────────────────────────────────────────");
 
@@ -352,10 +362,14 @@ public class TicketController implements ITicketService {
 		// 3. 해당 예매 정보의 valid를 제거
 		String TicketNo = null;
 		try {
+			System.out.println("메뉴로 돌아가기 : q");
 			do {
 				try {
 					System.out.print("취소할 예매번호를 입력해주세요 : ");
-					TicketNo = br.readLine();			
+					TicketNo = br.readLine();
+					
+					if ( TicketNo.equalsIgnoreCase("q") ) return;
+						
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -373,6 +387,10 @@ public class TicketController implements ITicketService {
 
 				pstmtCancelTicket.setString(1, TicketNo);
 				pstmtCancelTicket.executeUpdate();
+				
+				pstmtDeleteSeat.setString(1, TicketNo);
+	            pstmtDeleteSeat.executeUpdate();
+	            
 				break;
 
 			} while( true );

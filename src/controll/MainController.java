@@ -28,41 +28,40 @@ public class MainController {
     public void menu() throws Exception {
         // 로그인
         LoginManager lm = new LoginManager();
-        lm.loginUser(ms.login());
-        while(lm.getLoginUser()==null) {
-            lm.loginUser(ms.login());
-        }
-        
         while(true) {
-            mainMenu();
-            int select = Integer.parseInt(br.readLine());
-            switch (select) {
-            case 1: ts.ticketing();
-                break; // 예매
-            case 2: ts.ticketHistory("test");
-                break; // 예매 내역
-            case 3: ms.memberMenu();
-                break; // 회원정보 관리
-            case 4: ms.logout();
-                break; // 로그아웃
-            case 5: ms.register();//회원가입
-            	break; 
-            case 0: 
-                /* close(); */System.out.println("시스템을 종료합니다."); 
-                System.exit(0);; // 시스템 종료
+            ms.loginMenu(lm);
+            
+            while(lm.getLoginUser()!=null) {
+                mainMenu();
+                int select = Integer.parseInt(br.readLine());
+                switch (select) {
+                case 1: ts.showScreens();
+                	break; // 상영정보조회
+                case 2: ts.ticketing(lm.getLoginUser().getMember_id());
+                    break; // 예매
+                case 3: ts.ticketHistory(lm.getLoginUser().getMember_id());
+                    break; // 예매 내역
+                case 4: ts.ticketingCancel(lm.getLoginUser().getMember_id());
+                	break; // 예매 취소
+                case 5: ms.memberMenu(lm);
+                    break; // 회원정보 관리
+                case 6: lm.loginUser(ms.logout());
+                    break; // 로그아웃
+                }
             }
         }
     }
 
     private void mainMenu() {
-        System.out.println("=====================메인 메뉴========================");
-        System.out.println("1. 예매");
-        System.out.println("2. 예매 내역");
-        System.out.println("3. 회원정보 관리");
-        System.out.println("4. 로그아웃");
-        System.out.println("5. 회원가입");
-        System.out.println("0. 시스템 종료");
-        System.out.println("======================================================");
+        System.out.println("──────────────────────메인 메뉴──────────────────────");
+        System.out.println("1. 상영 시간표");
+        System.out.println("2. 예매");
+        System.out.println("3. 예매 내역");
+        System.out.println("4. 예매 취소");
+        System.out.println("5. 회원정보 관리");
+        System.out.println("6. 로그아웃");
+        System.out.println("─────────────────────────────────────────────────────");
         System.out.println();
+        System.out.print("입력: ");
     }
 }

@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import model.MemberVO;
 import service.IMemberService;
 import util.ConnectionSingletonHelper;
+import util.LoginManager;
 
 public class MemberController implements IMemberService {
     private static Connection conn;
@@ -25,7 +26,7 @@ public class MemberController implements IMemberService {
     private MemberVO vo;
     private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember;
     private final String sqlInsertMember = "INSERT INTO MEMBER (member_id, member_name, member_pwd, member_phone, member_birthday) VALUES(?,?,?,?,?)", 
-            sqlSelectMemberValid = "SELECT MEMBER_ID,MEMBER_PWD,MEMBER_VALID FROM MEMBER WHERE MEMBER_ID=? AND MEMBER_PWD=?",
+            sqlSelectMemberValid = "SELECT MEMBER_ID,MEMBER_PWD,MEMBER_VALID FROM MEMBER WHERE MEMBER_ID=? AND MEMBER_PWD=? AND MEMBER_VALID=?",
             sqlUpdateMemberLoginInfo = "UPDATE MEMBER SET MEMBER_VALID= ? WHERE MEMBER_ID = ?",
             sqlSelectMember = "SELECT member_id, member_name,member_phone,member_birthday FROM MEMBER WHERE MEMBER_ID=?",
             sqlUpdateMember = "UPDATE MEMBER SET MEMBER_NAME=?, MEMBER_PWD=?,MEMBER_PHONE=?,MEMBER_BIRTHDAY=? WHERE MEMBER_ID=?",
@@ -36,10 +37,7 @@ public class MemberController implements IMemberService {
         br = new BufferedReader(new InputStreamReader(System.in));
         sb = new StringBuilder();
         pstmtInsertMember = conn.prepareStatement(sqlInsertMember);
-//      pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo);
         pstmtDeleteMember = conn.prepareStatement(sqlDeleteMember);
-//      pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
-//      pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
         pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo);
         pstmtUpdateMember = conn.prepareStatement(sqlUpdateMember);
         pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
@@ -173,6 +171,7 @@ public class MemberController implements IMemberService {
    
         pstmtSelectMemberValid.setString(1, member_Id);
         pstmtSelectMemberValid.setString(2, sha256.encrypt(member_Pwd));
+        pstmtSelectMemberValid.setInt(3, 0);
         ResultSet rs = pstmtSelectMemberValid.executeQuery();
 
         if (!rs.isBeforeFirst()) {
@@ -189,22 +188,27 @@ public class MemberController implements IMemberService {
         pstmtUpdateMemberLoginInfo.setInt(1, 1);
         pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
         pstmtUpdateMemberLoginInfo.executeUpdate();
+        System.out.println("로그인이 되었습니다.");
       } catch (Exception e) {
         e.printStackTrace();
-      } finally {
-
-      }
-      System.out.println("로그인이 되었습니다.");
-      return vo;
+      } 
+    return vo;
     }
 
     @Override
-    public void logout() {
+    public MemberVO logout() {
       try {
-     
+        pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo );
+        pstmtUpdateMemberLoginInfo.setInt(1, 0);
+        pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
+        pstmtUpdateMemberLoginInfo.executeUpdate();
+        vo = null;
+        System.out.println("로그아웃 되었습니다.");
+        return vo;
       } catch (Exception e) {
         e.printStackTrace();
       }
+      return vo;
     }
 
     @Override
@@ -212,20 +216,21 @@ public class MemberController implements IMemberService {
         sb.setLength(0);
         sdf = new SimpleDateFormat("yyyy-MM-dd");
         try {
-            System.out.println("===================회원정보 보기======================");
-            
+            System.out.println("───────────────────회원정보 보기───────────────────");
+            pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
             pstmtSelectMember.setString(1, vo.getMember_id()); // 사용자 직접입력 X
 
             ResultSet rs = pstmtSelectMember.executeQuery();
-            sb.append("--------------------┳---------------------------------").append("\n");
-            sb.append(String.format("%-17s|%-6s|%-8s|%s", "아이디", "이름", "전화번호", "생일")).append("\n");
-            sb.append("--------------------+---------------------------------").append("\n");
-            while (rs.next()) {
-                int len = 20 - (rs.getString(1).length() - 1) / 3;
-                sb.append(String.format("%-" + len + "s|%-5s|%-12s|%-8s", rs.getString(1), rs.getString(2),
-                        rs.getString(3), sdf.format(rs.getDate(4)))).append("\n");
-                sb.append("--------------------┸---------------------------------").append("\n");
-            }
+            rs.next();
+            sb.append("──────────┬─────────────────────────────────────").append("\n");
+            sb.append(String.format("%-7s│%s", "아이디", rs.getString(1))).append("\n");
+            sb.append("──────────┼─────────────────────────────────────").append("\n");
+            sb.append(String.format("%-8s│%s", "이름", rs.getString(2))).append("\n");
+            sb.append("──────────┼─────────────────────────────────────").append("\n");
+            sb.append(String.format("%-6s│%s", "전화번호", rs.getString(3))).append("\n");
+            sb.append("──────────┼─────────────────────────────────────").append("\n");
+            sb.append(String.format("%-8s│%s", "생일", sdf.format(rs.getDate(4)))).append("\n");
+            sb.append("──────────┴─────────────────────────────────────").append("\n");
             System.out.println(sb);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -236,14 +241,14 @@ public class MemberController implements IMemberService {
     public void editProfile() throws IOException {
         SHA256 sha256 = new SHA256();
         try {
-            System.out.println("===================회원정보 수정======================");
+            System.out.println("───────────────────회원정보 수정───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
             
-            
-            pstmtSelectMember.setString(1, vo.getMember_id());
-            pstmtSelectMember.setString(2, pwd);
-            ResultSet rs = pstmtSelectMember.executeQuery();
+            pstmtSelectMemberValid.setString(1, vo.getMember_id());
+            pstmtSelectMemberValid.setString(2, pwd);
+            pstmtSelectMemberValid.setInt(3, 1);
+            ResultSet rs = pstmtSelectMemberValid.executeQuery();
             if(!rs.isBeforeFirst()) {
                 System.out.println("비밀번호가 틀렸습니다.");
                 return;
@@ -271,17 +276,18 @@ public class MemberController implements IMemberService {
     }
 
     @Override
-    public void removeMember() throws IOException {
+    public void removeMember(LoginManager lm) throws IOException {
         SHA256 sha256 = new SHA256();
         try {
-            System.out.println("=====================회원 탈퇴========================");
+            System.out.println("───────────────────회원 탈퇴───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
+            System.out.println(pwd);
             
-         
-            pstmtSelectMember.setString(1, vo.getMember_id());
-            pstmtSelectMember.setString(2, pwd);
-            ResultSet rs = pstmtSelectMember.executeQuery();
+            pstmtSelectMemberValid.setString(1, vo.getMember_id());
+            pstmtSelectMemberValid.setString(2, pwd);
+            pstmtSelectMemberValid.setInt(3, 1);
+            ResultSet rs = pstmtSelectMemberValid.executeQuery();
             if(!rs.isBeforeFirst()) {
                 System.out.println("비밀번호가 틀렸습니다.");
                 return;
@@ -292,6 +298,8 @@ public class MemberController implements IMemberService {
             
             int result = pstmtDeleteMember.executeUpdate();
             System.out.println(result<1?"다시 시도해주세요":"탈퇴 처리되었습니다");
+            vo = null;
+            lm.loginUser(vo);
         } catch (SQLException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
@@ -300,7 +308,6 @@ public class MemberController implements IMemberService {
     }
 
 	public class SHA256 {
-
 		public String encrypt(String text) throws NoSuchAlgorithmException {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			md.update(text.getBytes());
@@ -342,19 +349,34 @@ public class MemberController implements IMemberService {
 		}
 	}
 	private void menu() {
-        System.out.println("=====================회원 관리========================");
-        System.out.println("1. 회원정보 조회");
-        System.out.println("2. 회원정보 수정");
-        System.out.println("3. 회원탈퇴");
-        System.out.println("4. 돌아가기");
-        System.out.println("======================================================");
-        System.out.println();
+	    sb.setLength(0);
+	    sb.append("───────────────────회원 관리───────────────────").append("\n");
+	    sb.append("1. 회원정보 조회").append("\n");
+	    sb.append("2. 회원정보 수정").append("\n");
+	    sb.append("3. 회원탈퇴").append("\n");
+	    sb.append("4. 돌아가기").append("\n");
+	    sb.append("───────────────────────────────────────────────").append("\n\n");
+        sb.append("입력: ");
+        System.out.print(sb);
     }
 
-	public void loginMenu() throws NumberFormatException, IOException {
+	private void menu2() {
+	    sb.setLength(0);
+        sb.append("───────────────────────────────────────────────").append("\n");
+        sb.append("             영화 예매 시스템 시작").append("\n");
+        sb.append("───────────────────────────────────────────────").append("\n");
+        sb.append("1. 회원가입").append("\n");
+        sb.append("2. 로그인").append("\n");
+        sb.append("3. 시스템 종료").append("\n");
+        sb.append("───────────────────────────────────────────────").append("\n\n");
+        sb.append("입력: ");
+        System.out.print(sb);
+    }
+	
+	public void loginMenu(LoginManager lm) throws NumberFormatException, IOException {
         while (true) {
-            System.out.println();
-
+            menu2();
+           
             switch (Integer.parseInt(br.readLine())) {
             case 1:
                 try {
@@ -368,21 +390,23 @@ public class MemberController implements IMemberService {
                 }
                 break; // 회원가입
             case 2:
-                login();
+                lm.loginUser(login());
+                if(lm.getLoginUser()!=null)return;
                 break; // 로그인
-            case 3:
-                logout();
-                break; // 로그아웃
-            case 4: System.out.println("메인메뉴로 돌아갑니다.");
+            case 3: System.out.println("시스템을 종료합니다.");
+                System.exit(0);
                 return;
             } // switch end
         } // while end
     }
 
+    
+
     @Override
-    public void memberMenu() throws NumberFormatException, IOException {
+    public void memberMenu(LoginManager lm) throws NumberFormatException, IOException {
         while (true) {
             menu();
+            
             switch (Integer.parseInt(br.readLine())) {
             case 1:
                 myProfile();
@@ -391,8 +415,8 @@ public class MemberController implements IMemberService {
                 editProfile();
                 break; // 회원 수정
             case 3:
-                removeMember();
-                break; // 회원 삭제
+                removeMember(lm);
+                return; // 회원 삭제
             case 4: System.out.println("메인메뉴로 돌아갑니다.");
                 return;
             } // switch end
