@@ -39,7 +39,7 @@ public class MainController {
             switch (select) {
             case 1: ts.ticketing();
                 break; // 예매
-            case 2: ts.ticketHistory();
+            case 2: ts.ticketHistory("test");
                 break; // 예매 내역
             case 3: ms.memberMenu();
                 break; // 회원정보 관리

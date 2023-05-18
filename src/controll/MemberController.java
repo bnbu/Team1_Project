@@ -35,102 +35,129 @@ public class MemberController implements IMemberService {
         conn = ConnectionSingletonHelper.getConnection();
         br = new BufferedReader(new InputStreamReader(System.in));
         sb = new StringBuilder();
+        pstmtInsertMember = conn.prepareStatement(sqlInsertMember);
+//      pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo);
+        pstmtDeleteMember = conn.prepareStatement(sqlDeleteMember);
+//      pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
+//      pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
+        pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo);
+        pstmtUpdateMember = conn.prepareStatement(sqlUpdateMember);
+        pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
+        pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
+        pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
     }
-  
+ 
     @Override
     public void register() throws IOException, NoSuchAlgorithmException {
       SHA256 sha256 = new SHA256();
       	try {
-      		
-      		System.out.println("영문자와 숫자를 조합하여 5자이상 19자 이하로 입력하십시오");
-       		System.out.print("ID: ");
+      		System.out.println("영문자와 숫자를 조합하여 6자이상 20자 이하로 입력하십시오");
        		String member_Id = null;
 	        while(true) {
-	        	
+	        	System.out.print("ID: ");
 	        	member_Id = br.readLine();
 			    String mid = "^[a-z]+[a-z0-9]{5,19}$";
 			    boolean account = Pattern.matches(mid, member_Id);
 			    	
 			    if (!account) {
-		            System.out.println("잘못된 입령양식 입니다. 다시입력하십시오");
-				    System.out.print("ID: ");
+			        System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
 				    continue;
 				}
-			break;
+			    pstmtInsertMember.setString(1, member_Id);
+			    break;
 			}
         
 		    System.out.println("최소 8 자, 하나 이상의 문자와 하나의 숫자,특수문자 !,@,$,!,%,*,#,^,?,& 를 이용하여  입력하십시오");
-	        System.out.print("PassWord: ");
 	        String member_Pwd = null;//최소 8 자, 하나 이상의 문자와 하나의 숫자,
 	        while(true) {
+	        	System.out.print("PassWord: ");
 	        	member_Pwd = br.readLine();
 		        String mpwd= "^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$";
 		        boolean password = Pattern.matches(mpwd, member_Pwd);
 		        
 		        if (!password) {
-		            System.out.println("잘못된 입령양식 입니다. 다시입력하십시오");
-		            System.out.print("PassWord: ");
+		            System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+		            
 		            continue;
 		        }
 		        break;
 	        }
-        
-        System.out.print("Name: ");
+	        System.out.println("비밀번호를 한번 더 입력해 주십시오.");
+	        while(true) {
+	        	System.out.print("PassWord Confirm: ");
+	        	if (!br.readLine().equals(member_Pwd)) {
+	        		System.out.println("비밀번호가 다릅니다.");
+	        		continue;
+	        	}
+	        	pstmtInsertMember.setString(3, sha256.encrypt(member_Pwd));
+	        	break;
+	        }
+	        
+	        
         String member_Name = null;
         while(true) {
+        	System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
+        	System.out.print("Name: ");
         	member_Name = br.readLine();
-	        String mnf= "(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*$)";
+	        String mnf= "(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*${1,16})";
 	        boolean nameformat = Pattern.matches(mnf, member_Name);
 	        
 	        if (!nameformat) {
 	            System.out.println("잘못된 이름형식 입니다.");
-	            System.out.print("Name: ");
+	            
 	            continue;
 	        }
+	        pstmtInsertMember.setString(2, member_Name);
 	        break;
         }
         
-        System.out.print("Phone: ");
 	    String member_Phone = null; 
         while(true) {
+        	System.out.println("형식 000-0000-0000 으로 입력해 주십시오");
+        	System.out.print("Phone: ");
 	       member_Phone = br.readLine();
-	        String mpho = "(\\d{2,3})(\\d{3,4})(\\d{4})";
+	        String mpho = "^\\d{3}-\\d{4}-\\d{4}$";
 	        boolean phonenumber = Pattern.matches(mpho, member_Phone);
 	        
 	        if (!phonenumber) {
-	            System.out.println("잘못된 입령양식 입니다. 다시입력하십시오");
-	            System.out.print("Phone: ");
+	            System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+	            
 	            continue;
 	        }
+	        pstmtInsertMember.setString(4, member_Phone);
         break;
         }
         
-        System.out.print("Birthday: ");
+        
+        
         String member_Birthday = null;
         while(true) {
-	        member_Birthday = br.readLine();
-	        String mbd = "([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))";
-	        boolean memberbirthday = Pattern.matches(mbd, member_Birthday);
-	        
-	        if (!memberbirthday) {
-	            System.out.println("잘못된 입령양식 입니다. 다시입력하십시오");
-	            System.out.print("Birthday: ");
-	            continue;
-	        }
-	        break;
+        	try {
+        		System.out.println("주민등록번호 앞자리 6글자만 입력하십시오.");
+        		System.out.print("Birthday: ");
+        		member_Birthday = br.readLine();
+        		String mbd = "([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))";
+        		boolean memberbirthday = Pattern.matches(mbd, member_Birthday);
+        		
+        		if (!memberbirthday) {
+        			System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+        			continue;
+        		}
+        		pstmtInsertMember.setString(5, member_Birthday);
+        		pstmtInsertMember.executeUpdate();
+        		break;
+        	}
+        	catch (IOException e) {
+        		System.out.println("잘못된 입력입니다");
+        	}
+        	catch (SQLException e) {
+        		System.out.println("날짜를 다시 확인해주세요");
+        	}
         }
-        
-        pstmtInsertMember = conn.prepareStatement(sqlInsertMember);
-        pstmtInsertMember.setString(1, member_Id);
-        pstmtInsertMember.setString(2, member_Name);
-        pstmtInsertMember.setString(3, sha256.encrypt(member_Pwd));
-        pstmtInsertMember.setString(4, member_Phone);
-        pstmtInsertMember.setString(5, member_Birthday);
-
-        pstmtInsertMember.executeUpdate();// 값 저장
       } catch (Exception e) {
         e.printStackTrace();
       }
+      	
     }
 
     @Override
@@ -143,7 +170,7 @@ public class MemberController implements IMemberService {
         String member_Id = br.readLine();
         System.out.print("PassWord: ");
         String member_Pwd = br.readLine();
-        pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
+   
         pstmtSelectMemberValid.setString(1, member_Id);
         pstmtSelectMemberValid.setString(2, sha256.encrypt(member_Pwd));
         ResultSet rs = pstmtSelectMemberValid.executeQuery();
@@ -158,7 +185,7 @@ public class MemberController implements IMemberService {
           vo.setMember_pwd(rs.getString(2));
           vo.setMember_valid(rs.getInt(3));
         }
-        pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo );
+       
         pstmtUpdateMemberLoginInfo.setInt(1, 1);
         pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
         pstmtUpdateMemberLoginInfo.executeUpdate();
@@ -174,11 +201,9 @@ public class MemberController implements IMemberService {
     @Override
     public void logout() {
       try {
-        pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
+     
       } catch (Exception e) {
         e.printStackTrace();
-      } finally {
-
       }
     }
 
@@ -188,7 +213,7 @@ public class MemberController implements IMemberService {
         sdf = new SimpleDateFormat("yyyy-MM-dd");
         try {
             System.out.println("===================회원정보 보기======================");
-            pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
+            
             pstmtSelectMember.setString(1, vo.getMember_id()); // 사용자 직접입력 X
 
             ResultSet rs = pstmtSelectMember.executeQuery();
@@ -215,7 +240,7 @@ public class MemberController implements IMemberService {
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
             
-            pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
+            
             pstmtSelectMember.setString(1, vo.getMember_id());
             pstmtSelectMember.setString(2, pwd);
             ResultSet rs = pstmtSelectMember.executeQuery();
@@ -224,7 +249,7 @@ public class MemberController implements IMemberService {
                 return;
             }
             
-            pstmtUpdateMember = conn.prepareStatement(sqlUpdateMember);
+          
             pstmtUpdateMember.setString(5, vo.getMember_id());
             System.out.print("이름: ");
             pstmtUpdateMember.setString(1, br.readLine());
@@ -253,7 +278,7 @@ public class MemberController implements IMemberService {
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
             
-            pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
+         
             pstmtSelectMember.setString(1, vo.getMember_id());
             pstmtSelectMember.setString(2, pwd);
             ResultSet rs = pstmtSelectMember.executeQuery();
@@ -262,7 +287,7 @@ public class MemberController implements IMemberService {
                 return;
             }
             
-            pstmtDeleteMember = conn.prepareStatement(sqlDeleteMember);
+            
             pstmtDeleteMember.setString(1, vo.getMember_id());
             
             int result = pstmtDeleteMember.executeUpdate();
