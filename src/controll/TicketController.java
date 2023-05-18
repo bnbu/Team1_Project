@@ -14,7 +14,8 @@ public class TicketController implements ITicketService {
 	private BufferedReader br;
 	private PreparedStatement pstmtTotalMovie, pstmtTotalScreeningInfo, pstmtInsertTicket, pstmtCancelTicket,
 	pstmtSearchTicketInfo, pstmtSearchSeatInfo, pstmtSearchScreeningInfo, pstmtSearchTheaterInfo, pstmtSearchTicketInfoByNo,
-	pstmtSearchValidTicketInfo, pstmtSearchScreeiningByNo, pstmtInsertSeat, pstmtSearchTicketDesc,pstmtDeleteSeat;
+	pstmtSearchValidTicketInfo, pstmtSearchScreeiningByNo, pstmtInsertSeat, pstmtSearchTicketDesc,pstmtDeleteSeat,
+	pstmtSearchMovie;
 	private final String sqlTotalMovie = "SELECT * FROM MOVIE",
 			sqlTotalScreeningInfo = "SELECT SI.SCREENINFO_NO, M.MOVIE_TITLE, TO_CHAR(SI.SCREEN_DATE, 'YYYY-MM-DD'), SI.THEATER_NO, TO_CHAR(SI.MOVIE_START, 'HH24:MI'), TO_CHAR(SI.MOVIE_END, 'HH24:MI') FROM SCREENING_INFO SI, MOVIE M WHERE SI.MOVIE_NO = M.MOVIE_NO ORDER BY M.MOVIE_TITLE, SI.SCREEN_DATE, SI.MOVIE_START",
 			sqlCancelTicket = "UPDATE TICKETING SET CANCLE_DATE = SYSDATE, VALID = 0 WHERE TICKET_NO = ?",
@@ -28,7 +29,8 @@ public class TicketController implements ITicketService {
 			sqlSearchSreeningByNo = "SELECT * FROM SCREENING_INFO WHERE SCREENINFO_NO = ?",
 			sqlInsertSeat = "INSERT INTO SEAT_INFO VALUES (?, ?, ?)",
 			sqlSearchTicketDesc = "SELECT * FROM TICKETING WHERE MEMBER_ID = ? ORDER BY TICKET_DATE DESC",
-			sqlDeleteSeat = "DELETE FROM SEAT_INFO WHERE TICKET_NO = ?";
+			sqlDeleteSeat = "DELETE FROM SEAT_INFO WHERE TICKET_NO = ?",
+			sqlSearchMovie = "SELECT COUNT(*) FROM MOVIE WHERE MOVIE_NO = ?";
 			
 	private ResultSet rs;
 	private ResultSetMetaData rsmd ;
@@ -50,6 +52,7 @@ public class TicketController implements ITicketService {
 			pstmtInsertSeat = conn.prepareStatement(sqlInsertSeat);
 			pstmtSearchTicketDesc = conn.prepareStatement(sqlSearchTicketDesc);
 			pstmtDeleteSeat = conn.prepareStatement(sqlDeleteSeat);
+			pstmtSearchMovie = conn.prepareStatement(sqlSearchMovie);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -81,7 +84,7 @@ public class TicketController implements ITicketService {
 			e.printStackTrace();
 		}
 	}
-	private boolean[][] showSeat(int num) {
+	private boolean[][] showSeat(int num, String str) {
 		ResultSet theater = null;
 		int rows = 0, cols = 0;
 		try {
@@ -96,12 +99,15 @@ public class TicketController implements ITicketService {
 			return null;
 		}
 
+		ResultSet seat = null;
 		boolean[][] chk = new boolean[rows][cols];
 //		for (int i = 0; i < 10; i++) chk[(int)(Math.random() * rows)][(int)(Math.random() * cols)] = true;
 		try {
-			while (rs.next()) {
-				String str = rs.getString(1).toUpperCase();
-				chk[str.charAt(0) - 'A'][Integer.parseInt(str.substring(1)) - 1] = true;
+			pstmtSearchSeatInfo.setString(1, str);
+			seat = pstmtSearchSeatInfo.executeQuery();
+			while (seat.next()) {
+				String seatNum = seat.getString(1).toUpperCase();
+				chk[seatNum.charAt(0) - 'A'][Integer.parseInt(seatNum.substring(1)) - 1] = true;
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -136,6 +142,10 @@ public class TicketController implements ITicketService {
 		return chk;
 	}
 
+	// todo
+	// 1. 예매 영화 선택시 없는 영화번호 입력하면 알려주기 (해결)
+	// 2. 예매시 중복좌석 동시에 발생하는 경우에 발생하는 SQL 무결성 에러 try-catch
+	// 3. stringtokenizer -> split으로 변경 (나중에하기)
 	public void ticketing(String id) {
 		showMovies();
 
@@ -150,6 +160,14 @@ public class TicketController implements ITicketService {
 				if (str.equalsIgnoreCase("q")) return;
 				idx = Integer.parseInt(str);
 
+				pstmtSearchMovie.setInt(1, idx);
+				rs = pstmtSearchMovie.executeQuery();
+				rs.next();
+				if (rs.getInt(1) < 1) {
+					System.out.println("존재하지 않는 영화입니다, 다시 확인해주세요\n");
+					continue;
+				}
+				
 				pstmtSearchScreeningInfo.setInt(1, idx);
 				rs = pstmtSearchScreeningInfo.executeQuery();
 				break;
@@ -230,77 +248,94 @@ public class TicketController implements ITicketService {
 			rs = pstmtSearchScreeiningByNo.executeQuery();
 			rs.next();
 			theaterNum = rs.getInt(3); 
-			pstmtSearchSeatInfo.setString(1, str);
-			rs = pstmtSearchSeatInfo.executeQuery();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 		// 		=> 좌석정보의 에매 번호로부터 join을 통해 vaild로 좌석 계산에 포함할지 말지 계산
-		boolean[][] seat = showSeat(theaterNum);
 
 
 		// 5. 좌석을 인원수만큼 선택
-		String[] selected = new String[total];
-		System.out.println("메뉴로 돌아가기 : q");
+		// 5_1. 예매 생성 및 진행
 		while (true) {
 			try {
-				System.out.println("좌석은 (열행)순으로 입력해주세요 ex) A1 D15");
-				System.out.printf("%d개의 좌석을 선택해주세요 : ", total);
+				ConnectionSingletonHelper.getConnection().setAutoCommit(false);
+				pstmtInsertTicket.setInt(1, theaterNum);
+				pstmtInsertTicket.setString(2, id);
+				pstmtInsertTicket.setString(3, str);
+				pstmtInsertTicket.setInt(4, total);
+				pstmtInsertTicket.setInt(5, age[0]*12000 + age[1]*14000 + age[2]*5000);
+				pstmtInsertTicket.setDate(6, (java.sql.Date) new Date(System.currentTimeMillis()));
+				pstmtInsertTicket.executeQuery();
 				
-				// 좌석 입력 후 올바른 좌석형식인지 검사
-				String input = br.readLine();
-				if (input.equalsIgnoreCase("q")) return;
-				StringTokenizer st = new StringTokenizer(input);
-				boolean isClear = true;
+				String[] selected = new String[total];
+				boolean[][] seat = showSeat(theaterNum, str);
+				System.out.println("메뉴로 돌아가기 : q");
+				while (true) {
+					try {
+						System.out.println("좌석은 (열행)순으로 입력해주세요 ex) A1 D15");
+						System.out.printf("%d개의 좌석을 선택해주세요 : ", total);
+						
+						// 좌석 입력 후 올바른 좌석형식인지 검사
+						String input = br.readLine();
+						if (input.equalsIgnoreCase("q")) {
+							ConnectionSingletonHelper.getConnection().rollback();
+							ConnectionSingletonHelper.getConnection().setAutoCommit(true);
+							return;
+						}
+						StringTokenizer st = new StringTokenizer(input);
+						boolean isClear = true;
+						
+						for (int i = 0; i < total; i++) {
+							selected[i] = st.nextToken().toUpperCase();
+							isClear &= Pattern.matches("[a-zA-Z][0-9]+", selected[i]);
+						}
+						if (!isClear) {
+							System.out.println("올바르지 않은 형식입니다, 다시 선택해주세요\n");
+							continue;
+						}
+						
+						for (String s : selected) 
+							isClear &= !seat[s.charAt(0) - 'A'][Integer.parseInt(s.substring(1)) - 1];
+						if (!isClear) {
+							System.out.println("이미 선택된 좌석이 있습니다, 다시 선택해주세요\n");
+							continue;
+						}
+						break;
+					}
+					catch (Exception e) {
+						System.out.println("잘못된 입력입니다\n");
+					}
+				}
 				
-				for (int i = 0; i < total; i++) {
-					selected[i] = st.nextToken().toUpperCase();
-					isClear &= Pattern.matches("[a-zA-Z][0-9]+", selected[i]);
-				}
-				if (!isClear) {
-					System.out.println("올바르지 않은 형식입니다, 다시 선택해주세요\n");
-					continue;
+				pstmtSearchTicketDesc.setString(1, id);
+				rs = pstmtSearchTicketDesc.executeQuery();
+				rs.next();
+				String ticket = rs.getString(1);
+				
+				for (String s : selected) {
+					pstmtInsertSeat.setString(1, s);
+					pstmtInsertSeat.setString(2, str);
+					pstmtInsertSeat.setString(3, ticket);
+					pstmtInsertSeat.executeUpdate();
 				}
 				
-				for (String s : selected) 
-					isClear &= !seat[s.charAt(0) - 'A'][Integer.parseInt(s.substring(1)) - 1];
-				if (!isClear) {
-					System.out.println("이미 선택된 좌석이 있습니다, 다시 선택해주세요\n");
-					continue;
-				}
-				break;
+				ConnectionSingletonHelper.getConnection().commit();
+				ConnectionSingletonHelper.getConnection().setAutoCommit(true);
+				System.out.println("예매 완료\n");
 			}
 			catch (Exception e) {
-				System.out.println("잘못된 입력입니다\n");
+				try {
+					ConnectionSingletonHelper.getConnection().rollback();					
+				}
+				catch (Exception se) {
+					se.printStackTrace();
+				}
+				System.out.println("예매 중 오류가 발생했습니다, 다시 시도해주세요\n");
+				continue;
 			}
+			break;
 		}
-		// 6. 예매 완료
-		try {
-			pstmtInsertTicket.setInt(1, theaterNum);
-			pstmtInsertTicket.setString(2, id);
-			pstmtInsertTicket.setString(3, str);
-			pstmtInsertTicket.setInt(4, total);
-			pstmtInsertTicket.setInt(5, age[0]*12000 + age[1]*14000 + age[2]*5000);
-			pstmtInsertTicket.setDate(6, (java.sql.Date) new Date(System.currentTimeMillis()));
-			pstmtInsertTicket.executeQuery();
-			
-			pstmtSearchTicketDesc.setString(1, id);
-			rs = pstmtSearchTicketDesc.executeQuery();
-			rs.next();
-			String ticket = rs.getString(1);
-			
-			for (String s : selected) {
-				pstmtInsertSeat.setString(1, s);
-				pstmtInsertSeat.setString(2, str);
-				pstmtInsertSeat.setString(3, ticket);
-				pstmtInsertSeat.executeUpdate();
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.out.println("예매 완료\n");
 	}
 
 	/*
@@ -419,6 +454,5 @@ public class TicketController implements ITicketService {
 			e.printStackTrace();
 		}
 	}
-
 }
 
