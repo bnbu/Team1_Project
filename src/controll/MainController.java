@@ -1,8 +1,8 @@
 package controll;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 import service.IMemberService;
 import service.ITicketService;
 import util.LoginManager;
@@ -13,6 +13,7 @@ public class MainController {
     private BufferedReader br;
     private StringBuilder sb;
     
+ 
     public MainController() {
         sb = new StringBuilder();
         br = new BufferedReader(new InputStreamReader(System.in));
@@ -44,13 +45,8 @@ public class MainController {
                 	break; // 예매 취소
                 case 5: ms.memberMenu(lm);
                     break; // 회원정보 관리
-                case 6: lm.loginUser(ms.logout());;
+                case 6: lm.loginUser(ms.logout());
                     break; // 로그아웃
-                case 0: 
-                	ms.AllClose(); ts.AllClose();
-                    /* close(); */System.out.println("시스템을 종료합니다.");
-                    
-                    System.exit(0);; // 시스템 종료
                 }
             }
         }
@@ -64,7 +60,6 @@ public class MainController {
         System.out.println("4. 예매 취소");
         System.out.println("5. 회원정보 관리");
         System.out.println("6. 로그아웃");
-        System.out.println("0. 시스템 종료");
         System.out.println("─────────────────────────────────────────────────────");
         System.out.println();
         System.out.print("입력: ");
