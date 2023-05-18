@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import model.MemberVO;
 import service.IMemberService;
+import service.ITicketService;
 import util.ConnectionSingletonHelper;
 import util.LoginManager;
 
@@ -373,7 +374,7 @@ public class MemberController implements IMemberService {
         System.out.print(sb);
     }
 	
-	public void loginMenu(LoginManager lm) throws NumberFormatException, IOException {
+	public void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts) throws NumberFormatException, IOException {
         while (true) {
             menu2();
            
@@ -392,7 +393,8 @@ public class MemberController implements IMemberService {
                 if(lm.getLoginUser()!=null)return;
                 break; // 로그인
             case 3: System.out.println("시스템을 종료합니다.");
-            // ms.AllClose(); ts.AllClose();
+             	ms.AllClose(); ts.AllClose();
+             	ConnectionSingletonHelper.close();
                 System.exit(0);
                 return;
             } // switch end

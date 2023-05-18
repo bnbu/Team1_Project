@@ -41,7 +41,7 @@ public class ConnectionSingletonHelper {
 //		}
 //	}
 	
-		public static void close(Connection conn) {
+		public static void close() {
 			if( conn != null)
 				try {
 					conn.close();

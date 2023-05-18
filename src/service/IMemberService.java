@@ -14,7 +14,7 @@ public interface IMemberService {
 	
 	void myProfile() throws SQLException, IOException;
     void editProfile() throws IOException;
-    void loginMenu(LoginManager lm) throws NumberFormatException, IOException;
+    void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts) throws NumberFormatException, IOException;
     void memberMenu(LoginManager lm) throws NumberFormatException, IOException;
     void removeMember(LoginManager lm) throws IOException;
     void AllClose();

@@ -29,7 +29,7 @@ public class MainController {
         // 로그인
         LoginManager lm = new LoginManager();
         while(true) {
-            ms.loginMenu(lm);
+            ms.loginMenu(lm, ms, ts);
             
             while(lm.getLoginUser()!=null) {
                 mainMenu();
