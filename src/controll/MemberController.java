@@ -128,16 +128,16 @@ public class MemberController implements IMemberService {
             pstmtSelectMember.setString(1, vo.getMember_id()); // 사용자 직접입력 X
 
             ResultSet rs = pstmtSelectMember.executeQuery();
-            sb.append("────────────────────┬────────┬────────────┬───────────").append("\n");
-            sb.append(String.format("%-17s│%-6s│%-8s│%s", "아이디", "이름", "전화번호", "생일")).append("\n");
-            sb.append("────────────────────┼────────┼────────────┼───────────").append("\n");
-            while (rs.next()) {
-                int len1 = 20 - (rs.getString(1).length() - 1) / 3;
-                int len2 = 8 - (rs.getString(1).length() - 1) / 3;
-                sb.append(String.format("%-" + len1 + "s│%-" + len2 + "s│%-12s│%-8s", rs.getString(1), rs.getString(2),
-                        rs.getString(3), sdf.format(rs.getDate(4)))).append("\n");
-                sb.append("────────────────────┴────────┴────────────┴───────────").append("\n");
-            }
+            rs.next();
+            sb.append("──────────┬─────────────────────────────────────").append("\n");
+            sb.append(String.format("%-7s│%s", "아이디", rs.getString(1))).append("\n");
+            sb.append("──────────┼─────────────────────────────────────").append("\n");
+            sb.append(String.format("%-8s│%s", "이름", rs.getString(2))).append("\n");
+            sb.append("──────────┼─────────────────────────────────────").append("\n");
+            sb.append(String.format("%-6s│%s", "전화번호", rs.getString(3))).append("\n");
+            sb.append("──────────┼─────────────────────────────────────").append("\n");
+            sb.append(String.format("%-8s│%s", "생일", sdf.format(rs.getDate(4)))).append("\n");
+            sb.append("──────────┴─────────────────────────────────────").append("\n");
             System.out.println(sb);
         } catch (SQLException e) {
             e.printStackTrace();
