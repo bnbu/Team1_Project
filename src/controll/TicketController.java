@@ -15,7 +15,7 @@ public class TicketController implements ITicketService {
 	private PreparedStatement pstmtTotalMovie, pstmtTotalScreeningInfo, pstmtInsertTicket, pstmtCancelTicket,
 	pstmtSearchTicketInfo, pstmtSearchSeatInfo, pstmtSearchScreeningInfo, pstmtSearchTheaterInfo, pstmtSearchTicketInfoByNo,
 	pstmtSearchValidTicketInfo, pstmtSearchScreeiningByNo, pstmtInsertSeat, pstmtSearchTicketDesc,pstmtDeleteSeat,
-	pstmtSearchMovie;
+	pstmtSearchMovie, pstmtSearchSeatValid;
 	private final String sqlTotalMovie = "SELECT * FROM MOVIE",
 			sqlTotalScreeningInfo = "SELECT SI.SCREENINFO_NO, M.MOVIE_TITLE, TO_CHAR(SI.SCREEN_DATE, 'YYYY-MM-DD'), SI.THEATER_NO, TO_CHAR(SI.MOVIE_START, 'HH24:MI'), TO_CHAR(SI.MOVIE_END, 'HH24:MI') FROM SCREENING_INFO SI, MOVIE M WHERE SI.MOVIE_NO = M.MOVIE_NO ORDER BY M.MOVIE_TITLE, SI.SCREEN_DATE, SI.MOVIE_START",
 			sqlCancelTicket = "UPDATE TICKETING SET CANCLE_DATE = SYSDATE, VALID = 0 WHERE TICKET_NO = ?",
@@ -30,7 +30,8 @@ public class TicketController implements ITicketService {
 			sqlInsertSeat = "INSERT INTO SEAT_INFO VALUES (?, ?, ?)",
 			sqlSearchTicketDesc = "SELECT * FROM TICKETING WHERE MEMBER_ID = ? ORDER BY TICKET_DATE DESC",
 			sqlDeleteSeat = "DELETE FROM SEAT_INFO WHERE TICKET_NO = ?",
-			sqlSearchMovie = "SELECT COUNT(*) FROM MOVIE WHERE MOVIE_NO = ?";
+			sqlSearchMovie = "SELECT COUNT(*) FROM MOVIE WHERE MOVIE_NO = ?",
+			sqlSearchSeatValid = "SELECT COUNT(*) FROM SEAT_INFO SI JOIN TICKETING T ON SI.TICKET_NO = T.TICKET_NO WHERE T.VALID = 1 AND SI.SEAT_NO = ? AND T.SCREENINFO_NO = ?";
 			
 	private ResultSet rs;
 	private ResultSetMetaData rsmd ;
@@ -53,6 +54,7 @@ public class TicketController implements ITicketService {
 			pstmtSearchTicketDesc = conn.prepareStatement(sqlSearchTicketDesc);
 			pstmtDeleteSeat = conn.prepareStatement(sqlDeleteSeat);
 			pstmtSearchMovie = conn.prepareStatement(sqlSearchMovie);
+			pstmtSearchSeatValid = conn.prepareStatement(sqlSearchSeatValid);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -268,6 +270,7 @@ public class TicketController implements ITicketService {
 				pstmtInsertTicket.setDate(6, (java.sql.Date) new Date(System.currentTimeMillis()));
 				pstmtInsertTicket.executeQuery();
 				
+				boolean isClear = true;
 				String[] selected = new String[total];
 				boolean[][] seat = showSeat(theaterNum, str);
 				System.out.println("메뉴로 돌아가기 : q");
@@ -284,7 +287,7 @@ public class TicketController implements ITicketService {
 							return;
 						}
 						StringTokenizer st = new StringTokenizer(input);
-						boolean isClear = true;
+						isClear = true;
 						
 						for (int i = 0; i < total; i++) {
 							selected[i] = st.nextToken().toUpperCase();
@@ -312,13 +315,21 @@ public class TicketController implements ITicketService {
 				rs = pstmtSearchTicketDesc.executeQuery();
 				rs.next();
 				String ticket = rs.getString(1);
-				
+				 
 				for (String s : selected) {
+					pstmtSearchSeatValid.setString(1, s);
+					pstmtSearchSeatValid.setString(2, str);
+					rs = pstmtSearchSeatValid.executeQuery();
+					rs.next();
+					isClear &= (rs.getInt(1) == 0);
+					
 					pstmtInsertSeat.setString(1, s);
 					pstmtInsertSeat.setString(2, str);
 					pstmtInsertSeat.setString(3, ticket);
 					pstmtInsertSeat.executeUpdate();
 				}
+				
+				if (!isClear) throw new Exception();
 				
 				ConnectionSingletonHelper.getConnection().commit();
 				ConnectionSingletonHelper.getConnection().setAutoCommit(true);
@@ -326,7 +337,7 @@ public class TicketController implements ITicketService {
 			}
 			catch (Exception e) {
 				try {
-					ConnectionSingletonHelper.getConnection().rollback();					
+					ConnectionSingletonHelper.getConnection().rollback();		
 				}
 				catch (Exception se) {
 					se.printStackTrace();
