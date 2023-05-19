@@ -195,7 +195,7 @@ public class MemberController implements IMemberService {
             pstmtUpdateMemberLoginInfo.executeUpdate();
             System.out.println("로그인이 되었습니다.");
         } catch (Exception e) {
-            e.printStackTrace();
+            
         } 
         return vo;
     }
@@ -211,7 +211,7 @@ public class MemberController implements IMemberService {
             System.out.println("로그아웃 되었습니다.");
             return vo;
         } catch (Exception e) {
-            e.printStackTrace();
+            
         }
         return vo;
     }
@@ -238,7 +238,7 @@ public class MemberController implements IMemberService {
             sb.append("──────────┴─────────────────────────────────────").append("\n");
             System.out.println(sb);
         } catch (SQLException e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -322,9 +322,9 @@ public class MemberController implements IMemberService {
             System.out.println(result + "개 업데이트 성공");
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -353,9 +353,9 @@ public class MemberController implements IMemberService {
             vo = null;
             lm.loginUser(vo);
         } catch (SQLException e) {
-            e.printStackTrace();
+            
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -412,9 +412,9 @@ public class MemberController implements IMemberService {
                     try {
                         register();
                     } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
+                        
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        
                     }
                     break; // 회원가입
                 case 2:
@@ -439,7 +439,7 @@ public class MemberController implements IMemberService {
                 } // switch end
 
             } catch (Exception e) {
-                e.printStackTrace();
+                
                 System.out.println("잘못된 입력입니다.");
             }
         } // while end

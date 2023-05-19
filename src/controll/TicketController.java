@@ -62,7 +62,7 @@ public class TicketController implements ITicketService {
 			pstmtSearchSeatValid = conn.prepareStatement(sqlSearchSeatValid);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			
 		}
 	}
 
@@ -96,7 +96,7 @@ public class TicketController implements ITicketService {
 			System.out.println("────────┴────────────┴────────────┴───────────────────────────────────────────────┘");
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			
 		}
 	}
 	private boolean[][] showSeat(int num, String str) {
@@ -110,7 +110,7 @@ public class TicketController implements ITicketService {
 			cols = theater.getInt(2);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			
 			return null;
 		}
 
@@ -125,7 +125,7 @@ public class TicketController implements ITicketService {
 				chk[seatNum.charAt(0) - 'A'][Integer.parseInt(seatNum.substring(1)) - 1] = true;
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			
 			return null;
 		}
 
@@ -205,7 +205,7 @@ public class TicketController implements ITicketService {
 			}
 			System.out.println("──────────┴───────┴────────────────┴────────────┴────────────┘");
 		} catch (SQLException e) {
-			e.printStackTrace();
+			
 		}
 
 		// 2. 상영정보를 선택
@@ -266,7 +266,7 @@ public class TicketController implements ITicketService {
 			theaterNum = rs.getInt(3); 
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			
 		}
 		// 		=> 좌석정보의 에매 번호로부터 join을 통해 vaild로 좌석 계산에 포함할지 말지 계산
 
@@ -353,7 +353,6 @@ public class TicketController implements ITicketService {
 					ConnectionSingletonHelper.getConnection().rollback();		
 				}
 				catch (Exception se) {
-					se.printStackTrace();
 				}
 				System.out.println("예매 중 오류가 발생했습니다, 다시 시도해주세요\n");
 				continue;
@@ -413,7 +412,7 @@ public class TicketController implements ITicketService {
 				}
 			}
 
-		} catch (Exception e) { e.printStackTrace(); }
+		} catch (Exception e) {  }
 	} // end ticketHistory
 
 	public void ticketingCancel(String ID) throws IOException {
@@ -437,7 +436,7 @@ public class TicketController implements ITicketService {
 			System.out.println("──────────┴──────────┴───────────────────────────────────────────────┴────────┴─────────────┴──────────────────┘");
 
 
-		} catch (SQLException e) { e.printStackTrace(); }
+		} catch (SQLException e) {  }
 		// 2. 취소하고자 하는 예매 정보를 선택
 		// 3. 해당 예매 정보의 valid를 제거
 		String TicketNo = null;
@@ -452,7 +451,7 @@ public class TicketController implements ITicketService {
 
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					
 					continue;
 				}
 				pstmtSearchTicketInfoByNo.setString(1, TicketNo);
@@ -484,12 +483,12 @@ public class TicketController implements ITicketService {
 					break;
 					
 				} catch (ParseException e) {
-					e.printStackTrace();
+					
 				}
 
 			} while( true );
 			System.out.println("취소되었습니다.");
-		} catch (SQLException e) { e.printStackTrace(); }
+		} catch (SQLException e) {  }
 	}
 
 	public boolean ticketingDetail(String TicketNo) {
@@ -560,7 +559,7 @@ public class TicketController implements ITicketService {
 			}
 
 
-		} catch (Exception e) { e.printStackTrace();
+		} catch (Exception e) { 
 		}
 		return true;
 	}
@@ -586,7 +585,7 @@ public class TicketController implements ITicketService {
 			}
 			System.out.println("──────────┴──────────┴───────────────────────────────────────────────┴───────────┴──────────┴──────────┘");
 		} catch (SQLException e) {
-			e.printStackTrace();
+			
 		}
 	}
 	@Override

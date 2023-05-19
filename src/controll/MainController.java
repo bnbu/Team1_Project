@@ -24,7 +24,7 @@ public class MainController {
             as = new AdminController();
             lm = null;
         } catch (Exception e) {
-            e.printStackTrace();
+            
         }
     }
 

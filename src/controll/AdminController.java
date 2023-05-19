@@ -56,7 +56,7 @@ public class AdminController implements IAdminService {
             
         }
         catch (Exception e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -186,7 +186,7 @@ public class AdminController implements IAdminService {
             System.out.println("────────┴────────────┴────────────┴───────────────────────────────────────────────┘");
         }
         catch (Exception e) {
-            e.printStackTrace();
+            
         }
     }
     private String timeCalc(String start) {
@@ -240,7 +240,6 @@ public class AdminController implements IAdminService {
                     break;
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
                     System.out.println("잘못된 입력입니다\n");
                 }
             }
@@ -279,7 +278,7 @@ public class AdminController implements IAdminService {
                     break;
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    
                 }
             }
 
@@ -322,12 +321,12 @@ public class AdminController implements IAdminService {
                 }
             }
             catch (Exception e) {
-                e.printStackTrace();
+                
             }
 
         }
         catch (Exception e) {
-            e.printStackTrace();
+            
             System.out.println("추가에 실패");
         }
     }
@@ -399,7 +398,7 @@ public class AdminController implements IAdminService {
 		sb.append("──────────┴──────────┴────────────────────────┴───────────────────────────────────────────────┴────────┴─────────────┴──────────────────┘");
 		System.out.println(sb);
 	} catch (SQLException e) {
-		e.printStackTrace();
+		
 	}
 
      */
@@ -471,11 +470,11 @@ public class AdminController implements IAdminService {
 
                 } catch (Exception e) {
                     System.out.println("잘못된 입력입니다.");
-                    e.printStackTrace();
+                    
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            
         }
         //		3. 예매 취소
 
@@ -490,7 +489,6 @@ public class AdminController implements IAdminService {
                     if ( TicketNo.equals("q") ) return;
 
                 } catch (Exception e) {
-                    e.printStackTrace();
                     continue;
                 }
 
@@ -521,7 +519,7 @@ public class AdminController implements IAdminService {
             System.out.println("예약번호 " + TicketNo + " 표가 취소 되었습니다.");
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -551,15 +549,15 @@ public class AdminController implements IAdminService {
                 switch (select) {
                 case 1:
                     if ((lm.getFlag() & 1) == 0) throw new Exception();
-                    addMovie();
+                    sales();
                     break;
                 case 2:
                     if ((lm.getFlag() & 1 << 1) == 0) throw new Exception();
-                    addScreeningInfo();
+                    addMovie();
                     break;
                 case 3:
                     if ((lm.getFlag() & 1 << 2) == 0) throw new Exception();
-                    sales();
+                    addScreeningInfo();
                     break;
                 case 4:
                     if ((lm.getFlag() & 1 << 3) == 0) throw new Exception();
