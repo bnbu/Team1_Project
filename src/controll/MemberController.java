@@ -25,11 +25,12 @@ public class MemberController implements IMemberService {
     private StringBuilder sb;
     private SimpleDateFormat sdf;
     private MemberVO vo;
-    private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember;
+    private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember,pstmtSelectLikeByid;
     private final String sqlInsertMember = "INSERT INTO MEMBER (member_id, member_name, member_pwd, member_phone, member_birthday) VALUES(?,?,?,?,?)", 
             sqlSelectMemberValid = "SELECT MEMBER_ID,MEMBER_PWD,MEMBER_VALID FROM MEMBER WHERE MEMBER_ID=? AND MEMBER_PWD=? AND MEMBER_VALID=?",
             sqlUpdateMemberLoginInfo = "UPDATE MEMBER SET MEMBER_VALID= ? WHERE MEMBER_ID = ?",
             sqlSelectMember = "SELECT member_id, member_name,member_phone,member_birthday FROM MEMBER WHERE MEMBER_ID=?",
+            sqlSelectLikeByid = "select member_id from member where member_id like '%'||?||'%'",
             sqlUpdateMember = "UPDATE MEMBER SET MEMBER_NAME=?, MEMBER_PWD=?,MEMBER_PHONE=?,MEMBER_BIRTHDAY=? WHERE MEMBER_ID=?",
             sqlDeleteMember = "UPDATE MEMBER SET MEMBER_VALID=3 WHERE MEMBER_ID=?";
     
@@ -44,6 +45,7 @@ public class MemberController implements IMemberService {
         pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
         pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
         pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
+        pstmtSelectLikeByid = conn.prepareStatement(sqlSelectLikeByid);
     }
  
     @Override
@@ -179,8 +181,7 @@ public class MemberController implements IMemberService {
            } catch (Exception e) {
         
            }
-      }
-
+    }
 
     @Override
     public MemberVO login() throws IOException {
@@ -397,6 +398,8 @@ public class MemberController implements IMemberService {
         	   ConnectionSingletonHelper.close();
         	   System.exit(0);
         	   return;
+        	   default: System.out.println("입력을 확인해주세요.");
+        	   break;
         	   } // switch end
 			
 		} catch (Exception e) {
@@ -411,20 +414,24 @@ public class MemberController implements IMemberService {
     public void memberMenu(LoginManager lm) throws NumberFormatException, IOException {
         while (true) {
             menu();
-            
-            switch (Integer.parseInt(br.readLine())) {
-            case 1:
-                myProfile();
-                break; // 회원정보
-            case 2:
-                editProfile();
-                break; // 회원 수정
-            case 3:
-                removeMember(lm);
-                return; // 회원 삭제
-            case 4: System.out.println("메인메뉴로 돌아갑니다.");
-                return;
-            } // switch end
+            try {
+            	switch (Integer.parseInt(br.readLine())) {
+            	case 1:
+            		myProfile();
+            		break; // 회원정보
+            	case 2:
+            		editProfile();
+            		break; // 회원 수정
+            	case 3:
+            		removeMember(lm);
+            		return; // 회원 삭제
+            	case 4: System.out.println("메인메뉴로 돌아갑니다.");
+            	return;
+            	} // switch end
+            }
+            catch (Exception e) {
+            	System.out.println("잘못된 입력입니다\n");
+            }
         } // while end
     }
     @Override
