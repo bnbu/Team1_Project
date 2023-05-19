@@ -258,6 +258,7 @@ public class MemberController implements IMemberService {
             }
             pstmtUpdateMember.setString(5, vo.getMember_id()); 
 
+            System.out.println("메뉴로 돌아가기 : q");
             System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
             while(true) {
                 System.out.print("이름: ");
