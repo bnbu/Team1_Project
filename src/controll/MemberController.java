@@ -61,7 +61,7 @@ public class MemberController implements IMemberService {
             System.out.println("초기메뉴로 돌아가기 : q");
             while (true) {
                 System.out.print("ID: ");
-                memberId = br.readLine();
+                memberId = br.readLine().trim().trim();
                 if(memberId.equalsIgnoreCase("q")) return;
                 if (!isValid("^[a-z]+[a-z0-9]{5,19}$",memberId)) {
                     System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
@@ -82,7 +82,7 @@ public class MemberController implements IMemberService {
             System.out.println("최소 8 자, 하나 이상의 문자와 하나의 숫자,특수문자 !,@,$,!,%,*,#,^,?,& 를 이용하여  입력하십시오");
             while(true) {
                 System.out.print("PassWord: ");
-                memberPwd = br.readLine();
+                memberPwd = br.readLine().trim();
                 if(memberPwd.equalsIgnoreCase("q")) return;
                 if (!isValid("^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$", memberPwd)) {
                     System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
@@ -94,7 +94,7 @@ public class MemberController implements IMemberService {
             System.out.println("비밀번호를 한번 더 입력해 주십시오.");
             while(true) {
                 System.out.print("PassWord Confirm: ");
-                if (!br.readLine().equals(memberPwd)) {
+                if (!br.readLine().trim().equals(memberPwd)) {
                     System.out.println("비밀번호가 다릅니다.");
                     continue;
                 }
@@ -105,7 +105,7 @@ public class MemberController implements IMemberService {
             System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
             while(true) {
                 System.out.print("Name: ");
-                memberName  = br.readLine();
+                memberName  = br.readLine().trim();
                 if(memberName.equalsIgnoreCase("q")) return;
                 if (!isValid("(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*${1,16})", memberName)) {
                     System.out.println("잘못된 이름형식 입니다.");
@@ -118,7 +118,7 @@ public class MemberController implements IMemberService {
             System.out.println("형식 000-0000-0000 으로 입력해 주십시오");
             while(true) {
                 System.out.print("Phone: ");
-                memberPhone = br.readLine();
+                memberPhone = br.readLine().trim();
                 if(memberPhone.equalsIgnoreCase("q")) return;
                 if (!isValid("^\\d{3}-\\d{4}-\\d{4}$", memberPhone)) {
                     System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
@@ -132,7 +132,7 @@ public class MemberController implements IMemberService {
             while(true) {
                 try {
                     System.out.print("Birthday: ");
-                    memberBirthday = br.readLine();
+                    memberBirthday = br.readLine().trim();
                     if(memberBirthday.equalsIgnoreCase("q")) return;
                     if (!isValid("([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))", memberBirthday)) {
                         System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
@@ -164,9 +164,9 @@ public class MemberController implements IMemberService {
 
         try {
             System.out.print("ID: ");
-            String memberId = br.readLine();
+            String memberId = br.readLine().trim();
             System.out.print("PassWord: ");
-            String memberPwd = br.readLine();
+            String memberPwd = br.readLine().trim();
 
             pstmtSelectMemberValid.setString(1, memberId);
             pstmtSelectMemberValid.setString(2, sha256.encrypt(memberPwd));
@@ -246,7 +246,7 @@ public class MemberController implements IMemberService {
         try {
             System.out.println("───────────────────회원정보 수정───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
-            System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
+            System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine().trim());
 
             pstmtSelectMemberValid.setString(1, vo.getMember_id());
             pstmtSelectMemberValid.setString(2, pwd);
@@ -262,7 +262,7 @@ public class MemberController implements IMemberService {
             System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
             while(true) {
                 System.out.print("이름: ");
-                memberName  = br.readLine();
+                memberName  = br.readLine().trim();
                 if(memberName.equalsIgnoreCase("q")) return;
                 if (!isValid("(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*${1,16})", memberName)) {
                     System.out.println("잘못된 이름형식 입니다.");
@@ -274,7 +274,7 @@ public class MemberController implements IMemberService {
             System.out.println("최소 8 자, 하나 이상의 문자와 하나의 숫자,특수문자 !,@,$,!,%,*,#,^,?,& 를 이용하여  입력하십시오");
             while(true) {
                 System.out.print("PassWord: ");
-                memberPwd = br.readLine();
+                memberPwd = br.readLine().trim();
                 if(memberPwd.equalsIgnoreCase("q")) return;
                 if (!isValid("^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$", memberPwd)) {
                     System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
@@ -287,7 +287,7 @@ public class MemberController implements IMemberService {
             System.out.println("형식 000-0000-0000 으로 입력해 주십시오");
             while(true) {
                 System.out.print("Phone: ");
-                memberPhone = br.readLine();
+                memberPhone = br.readLine().trim();
                 if(memberPhone.equalsIgnoreCase("q")) return;
                 if (!isValid("^\\d{3}-\\d{4}-\\d{4}$", memberPhone)) {
                     System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
@@ -301,7 +301,7 @@ public class MemberController implements IMemberService {
             while(true) {
                 try {
                     System.out.print("Birthday: ");
-                    memberBirthday = br.readLine();
+                    memberBirthday = br.readLine().trim();
                     if(memberBirthday.equalsIgnoreCase("q")) return;
                     if (!isValid("([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))", memberBirthday)) {
                         System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
@@ -331,7 +331,7 @@ public class MemberController implements IMemberService {
         try {
             System.out.println("───────────────────회원 탈퇴───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
-            System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
+            System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine().trim());
             System.out.println(pwd);
 
             pstmtSelectMemberValid.setString(1, vo.getMember_id());
@@ -405,7 +405,7 @@ public class MemberController implements IMemberService {
         while (true) {
             menu2();
             try {
-                switch (Integer.parseInt(br.readLine())) {
+                switch (Integer.parseInt(br.readLine().trim())) {
                 case 1:
                     try {
                         register();
@@ -441,7 +441,7 @@ public class MemberController implements IMemberService {
         while (true) {
             menu();
             try {
-            	switch (Integer.parseInt(br.readLine())) {
+            	switch (Integer.parseInt(br.readLine().trim())) {
             	case 1:
             		myProfile();
             		break; // 회원정보
