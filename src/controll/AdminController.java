@@ -19,7 +19,7 @@ public class AdminController implements IAdminService {
     private ResultSet rs;
     private StringBuilder sb;
     private PreparedStatement pstmtTotalMovie, pstmtSearchMovie, pstmtInsertScreenInfo, pstmtSearchMovieByNo,pstmtInsertMovie,
-    pstmtSerchAllBookedTicket, pstmtSearchIDTicketInfo, pstmtCancelAdmin, pstmtSearchTicketInfoByNo, pstmtSearchIDByNo, pstmtCancelValidAdmin;
+    pstmtSerchAllBookedTicket, pstmtSearchIDTicketInfo, pstmtCancelAdmin, pstmtSearchTicketInfoByNo, pstmtSearchIDByNo, pstmtCancelValidAdmin, pstmtSelectMonths, pstmtSelectDaily;
     private final String sqlTotalMovie = "SELECT * FROM MOVIE",
             sqlSearchMovie = "SELECT COUNT(*) FROM MOVIE WHERE MOVIE_NO = ?",
             sqlInsertScreenInfo = "INSERT INTO SCREENING_INFO VALUES (?||?||SCREENING_INFO_SEQ.NEXTVAL, ?, ?, TO_DATE(?||' '||?, 'YYYY-MM-DD HH24:MI'), TO_DATE(?||' '||?, 'YYYY-MM-DD HH24:MI'), ?)",
@@ -30,7 +30,9 @@ public class AdminController implements IAdminService {
             sqlCancelAdmin = "UPDATE TICKETING SET CANCLE_DATE = SYSDATE, VALID = 0 WHERE TICKET_NO = ?",
             sqlCancelValidAdmin = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.MEMBER_ID, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD'), M.MOVIE_TITLE, TI.VALID FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.TICKET_NO = ?",
             sqlSearchTicketInfoByNo = "SELECT COUNT(*) FROM TICKETING WHERE TICKET_NO = ?",
-            sqlSearchIDByNo = "SELECT COUNT(*) FROM MEMBER WHERE MEMBER_ID = ?";
+            sqlSearchIDByNo = "SELECT COUNT(*) FROM MEMBER WHERE MEMBER_ID = ?",
+            sqlSelectMonths = "SELECT SUM(PRICE) FROM TICKETING WHERE VALID = 1 AND TO_CHAR(TICKET_DATE , 'YYMM') = TO_CHAR(ADD_MONTHS(TO_DATE('23-01-01'), ?), 'YYMM')",
+			sqlSelectDaily = "SELECT SUM(PRICE) FROM TICKETING WHERE VALID = 1 AND TO_CHAR(TICKET_DATE , 'YYMMDD') = TO_CHAR(SYSDATE , 'YYMMDD')";
 
 
     public AdminController() {
@@ -49,6 +51,9 @@ public class AdminController implements IAdminService {
             pstmtSearchTicketInfoByNo = conn.prepareStatement(sqlSearchTicketInfoByNo);
             pstmtSearchIDByNo = conn.prepareStatement(sqlSearchIDByNo);
             pstmtCancelValidAdmin = conn.prepareStatement(sqlCancelValidAdmin);
+            pstmtSelectMonths = conn.prepareStatement(sqlSelectMonths);
+			pstmtSelectDaily = conn.prepareStatement(sqlSelectDaily);
+            
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -330,7 +335,47 @@ public class AdminController implements IAdminService {
 
     @Override
     public void sales() {
-
+    	sb.setLength(0);
+    	System.out.println("메뉴로 돌아가기 : q");
+    	System.out.println("1. 일일 매출 조회\n2. 월별 매출 조회");
+    	while(true){
+    		
+    		try {
+    			String num = br.readLine();
+    			if (num.equalsIgnoreCase("q")) return;
+    			int inte = Integer.parseInt(num);
+    			switch(inte) {
+    			case 1:
+    				rs = pstmtSelectDaily.executeQuery();
+    				rs.next();
+    				System.out.println("일일 매출 조회를 선택하셨습니다.");
+    				System.out.println("──────────금일 매출 조회──────────────");
+    				System.out.println("금일 매출 ┃ "+rs.getInt(1));
+    				System.out.println("──────────────────────────────────────");
+    				break;
+    				
+    			case 2:
+    				try {
+    				System.out.println("월별 매출 조회를 선택하셨습니다.");
+    				System.out.print("조회하고자 하는 월을 입력하십시오 : ");
+    				int inputMonths = Integer.parseInt(br.readLine());
+    				pstmtSelectMonths.setInt(1, inputMonths - 1);
+    				rs = pstmtSelectMonths.executeQuery();
+    				rs.next();
+   				 	System.out.println("──────────"+String.format("%02d ", inputMonths) +"월별 매출 조회───────────");
+   					System.out.println(String.format("%02d ", inputMonths)+"월별 매출 ┃ "+rs.getInt(1));   				 	
+   				 	System.out.println("──────────────────────────────────────");
+    				break;
+    				}catch(Exception e) {
+    					System.out.println("잘못된 입력양식입니다.");
+    				}
+    			}
+    			break;
+     		}
+    		catch(Exception e) {
+    			System.out.println("잘못된 입력방식입니다. \n다시 입력하십시오");
+    		} 
+    	}
     }
 
     /*
