@@ -1,31 +1,40 @@
 package controll;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import service.IAdminService;
 import util.ConnectionSingletonHelper;
-import java.util.*;
-import java.sql.*;
-import java.io.*;
 
 public class AdminController implements IAdminService {
 	private BufferedReader br;
 	private ResultSet rs;
-	private PreparedStatement pstmtTotalMovie, pstmtSearchMovie, pstmtInsertScreenInfo, pstmtSearchMovieByNo;
+	 private StringBuilder sb;
+	private PreparedStatement pstmtTotalMovie, pstmtSearchMovie, pstmtInsertScreenInfo, pstmtSearchMovieByNo,pstmtInsertMovie;
 	private final String sqlTotalMovie = "SELECT * FROM MOVIE",
 						 sqlSearchMovie = "SELECT COUNT(*) FROM MOVIE WHERE MOVIE_NO = ?",
 						 sqlInsertScreenInfo = "INSERT INTO SCREENING_INFO VALUES (?||?||SCREENING_INFO_SEQ.NEXTVAL, ?, ?, TO_DATE(?||' '||?, 'YYYY-MM-DD HH24:MI'), TO_DATE(?||' '||?, 'YYYY-MM-DD HH24:MI'), ?)",
-						 sqlSearchMovieByNo = "SELECT * FROM MOVIE WHERE MOVIE_NO = ?";
+						 sqlSearchMovieByNo = "SELECT * FROM MOVIE WHERE MOVIE_NO = ?",
+	sqlInsertMovie = "insert into movie values(movie_seq.nextval,?,?,?,?,?,?)";
 						 
 	
 	public AdminController() {
 		try {
 			br = new BufferedReader(new InputStreamReader(System.in));
 			Connection conn = ConnectionSingletonHelper.getConnection();
+			sb = new StringBuilder();
 			pstmtTotalMovie = conn.prepareStatement(sqlTotalMovie);
 			pstmtSearchMovie = conn.prepareStatement(sqlSearchMovie);
 			pstmtInsertScreenInfo = conn.prepareStatement(sqlInsertScreenInfo);
 			pstmtSearchMovieByNo = conn.prepareStatement(sqlSearchMovieByNo);
+			pstmtInsertMovie = conn.prepareStatement(sqlInsertMovie);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -34,6 +43,34 @@ public class AdminController implements IAdminService {
 	
     @Override
     public void addMovie() {
+      
+        String title, author, genre, start;
+        int length, rank;
+        try {
+            showMovies();
+            System.out.println("───────────────────────────────────────────────");
+            System.out.println("                  영화 추가");
+            System.out.println("───────────────────────────────────────────────");
+            System.out.print("타이틀: "); title = br.readLine().trim();
+            System.out.print("상영시간: "); length = Integer.parseInt(br.readLine().trim());
+            System.out.print("감독: "); author = br.readLine().trim();
+            System.out.print("장르: "); genre = br.readLine().trim();
+            System.out.print("상영등급(0: 전연령,1: 12세 ,2: 15세,3: 18세): "); rank = Integer.parseInt(br.readLine().trim());
+            System.out.print("개봉일: "); start = br.readLine().trim();
+            
+            pstmtInsertMovie.setString(1,title); // 타이틀
+            pstmtInsertMovie.setInt(2,length);// 상영시간
+            pstmtInsertMovie.setString(3,author); // 감독
+            pstmtInsertMovie.setString(4,genre); // 장르
+            pstmtInsertMovie.setInt(5,rank); // 상영등급
+            pstmtInsertMovie.setString(6,start); // 개봉일
+            
+            pstmtInsertMovie.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println("잘못된 입력입니다 다시 확인해주세요.");
+        }
         
     }
 
@@ -43,6 +80,7 @@ public class AdminController implements IAdminService {
 		else if (i == 2) return "15세";
 		else return "18세";
 	}
+	
     private void showMovies() {
 		try {
 			rs = pstmtTotalMovie.executeQuery();
@@ -216,16 +254,17 @@ public class AdminController implements IAdminService {
 
     @Override
     public void sales() {
-        
+
     }
 
     @Override
     public void cancel() {
-        
+
     }
 
     @Override
     public void menu() {
+        addMovie();
     	addScreeningInfo();
     }
 
