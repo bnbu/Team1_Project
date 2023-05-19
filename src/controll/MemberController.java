@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,14 +25,18 @@ public class MemberController implements IMemberService {
     private StringBuilder sb;
     private SimpleDateFormat sdf;
     private MemberVO vo;
-    private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember,pstmtSelectLikeByid;
+    private ResultSet rs;
+    private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, 
+    		pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember,pstmtSelectLikeByid,
+    		pstmtSearchAdmin;
     private final String sqlInsertMember = "INSERT INTO MEMBER (member_id, member_name, member_pwd, member_phone, member_birthday) VALUES(?,?,?,?,?)", 
             sqlSelectMemberValid = "SELECT MEMBER_ID,MEMBER_NAME,MEMBER_VALID FROM MEMBER WHERE MEMBER_ID=? AND MEMBER_PWD=? AND MEMBER_VALID=?",
             sqlUpdateMemberLoginInfo = "UPDATE MEMBER SET MEMBER_VALID= ? WHERE MEMBER_ID = ?",
             sqlSelectMember = "SELECT member_id, member_name,member_phone,member_birthday FROM MEMBER WHERE MEMBER_ID=?",
             sqlSelectLikeByid = "select member_id from member where member_id like '%'||?||'%'",
             sqlUpdateMember = "UPDATE MEMBER SET MEMBER_NAME=?, MEMBER_PWD=?,MEMBER_PHONE=?,MEMBER_BIRTHDAY=? WHERE MEMBER_ID=?",
-            sqlDeleteMember = "UPDATE MEMBER SET MEMBER_VALID=3 WHERE MEMBER_ID=?";
+            sqlDeleteMember = "UPDATE MEMBER SET MEMBER_VALID=3 WHERE MEMBER_ID=?",
+            sqlSearchAdmin = "SELECT COUNT(*) FROM ADMIN WHERE MEMBER_ID = ?";
 
     public MemberController() throws Exception {
         conn = ConnectionSingletonHelper.getConnection();
@@ -45,6 +50,7 @@ public class MemberController implements IMemberService {
         pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
         pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
         pstmtSelectLikeByid = conn.prepareStatement(sqlSelectLikeByid);
+        pstmtSearchAdmin = conn.prepareStatement(sqlSearchAdmin);
     }
 
     @Override
@@ -69,7 +75,7 @@ public class MemberController implements IMemberService {
                 }
 
                 pstmtSelectLikeByid.setString(1, memberId);
-                ResultSet rs = pstmtSelectLikeByid.executeQuery();
+                rs = pstmtSelectLikeByid.executeQuery();
                 if(rs.isBeforeFirst()) {
                     System.out.println("이미 존재하는 아이디입니다.");
                     continue;
@@ -171,7 +177,7 @@ public class MemberController implements IMemberService {
             pstmtSelectMemberValid.setString(1, memberId);
             pstmtSelectMemberValid.setString(2, sha256.encrypt(memberPwd));
             pstmtSelectMemberValid.setInt(3, 0);
-            ResultSet rs = pstmtSelectMemberValid.executeQuery();
+            rs = pstmtSelectMemberValid.executeQuery();
 
             if (!rs.isBeforeFirst()) {
                 System.out.println("다시 시도해주세요.");
@@ -219,7 +225,7 @@ public class MemberController implements IMemberService {
             pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
             pstmtSelectMember.setString(1, vo.getMember_id()); // 사용자 직접입력 X
 
-            ResultSet rs = pstmtSelectMember.executeQuery();
+            rs = pstmtSelectMember.executeQuery();
             rs.next();
             sb.append("──────────┬─────────────────────────────────────").append("\n");
             sb.append(String.format("%-7s│%s", "아이디", rs.getString(1))).append("\n");
@@ -251,7 +257,7 @@ public class MemberController implements IMemberService {
             pstmtSelectMemberValid.setString(1, vo.getMember_id());
             pstmtSelectMemberValid.setString(2, pwd);
             pstmtSelectMemberValid.setInt(3, 1);
-            ResultSet rs = pstmtSelectMemberValid.executeQuery();
+            rs = pstmtSelectMemberValid.executeQuery();
             if(!rs.isBeforeFirst()) {
                 System.out.println("비밀번호가 틀렸습니다.");
                 return;
@@ -337,7 +343,7 @@ public class MemberController implements IMemberService {
             pstmtSelectMemberValid.setString(1, vo.getMember_id());
             pstmtSelectMemberValid.setString(2, pwd);
             pstmtSelectMemberValid.setInt(3, 1);
-            ResultSet rs = pstmtSelectMemberValid.executeQuery();
+            rs = pstmtSelectMemberValid.executeQuery();
             if(!rs.isBeforeFirst()) {
                 System.out.println("비밀번호가 틀렸습니다.");
                 return;
@@ -417,7 +423,13 @@ public class MemberController implements IMemberService {
                     break; // 회원가입
                 case 2:
                     lm.loginUser(login());
-                    if(lm.getLoginUser()!=null)return;
+                    if(lm.getLoginUser()!=null) {
+                    	pstmtSearchAdmin.setString(1, lm.getLoginUser().getMember_id());
+                    	rs = pstmtSearchAdmin.executeQuery();
+                    	rs.next();
+                    	lm.setIsAdmin(rs.getInt(1) == 1);
+                    	return;
+                    }
                     break; // 로그인
                 case 3: System.out.println("시스템을 종료합니다.");
                 ms.AllClose(); ts.AllClose();
