@@ -245,10 +245,7 @@ public class MemberController implements IMemberService {
     @Override
     public void editProfile() throws IOException {
         SHA256 sha256 = new SHA256();
-        String memberName=null,
-                memberPwd=null,
-                memberPhone=null,
-                memberBirthday=null;
+        String memberName,memberPwd,memberPhone,memberBirthday;
         try {
             System.out.println("───────────────────회원정보 수정───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
@@ -349,7 +346,6 @@ public class MemberController implements IMemberService {
                 return;
             }
 
-
             pstmtDeleteMember.setString(1, vo.getMember_id());
 
             int result = pstmtDeleteMember.executeUpdate();
@@ -388,8 +384,8 @@ public class MemberController implements IMemberService {
         sb.append("1. 회원정보 조회").append("\n");
         sb.append("2. 회원정보 수정").append("\n");
         sb.append("3. 회원탈퇴").append("\n");
-        sb.append("4. 돌아가기").append("\n");
         sb.append("───────────────────────────────────────────────").append("\n\n");
+        sb.append("메뉴로 돌아가기 : q").append("\n");
         sb.append("입력: ");
         System.out.print(sb);
     }
@@ -453,7 +449,10 @@ public class MemberController implements IMemberService {
         while (true) {
             menu();
             try {
-            	switch (Integer.parseInt(br.readLine().trim())) {
+                String str = br.readLine().trim();
+                if(str.equalsIgnoreCase("q")) return;
+                int select = Integer.parseInt(str);
+            	switch (select) {
             	case 1:
             		myProfile();
             		break; // 회원정보
