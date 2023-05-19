@@ -3,6 +3,8 @@ package controll;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import oracle.core.lmx.LmxRepConversion;
+import service.IAdminService;
 import service.IMemberService;
 import service.ITicketService;
 import util.LoginManager;
@@ -10,13 +12,17 @@ import util.LoginManager;
 public class MainController { 
     private IMemberService ms;
     private ITicketService ts;
+    private IAdminService as;
     private BufferedReader br;
+    private LoginManager lm;
 
     public MainController() {
         br = new BufferedReader(new InputStreamReader(System.in));
         try {
             ms = new MemberController();
             ts = new TicketController();
+            as = new AdminController();
+            lm = null;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -24,33 +30,36 @@ public class MainController {
 
     public void menu() throws Exception {
         // 로그인
-        LoginManager lm = new LoginManager();
+        lm = new LoginManager();
         while(true) {
-            ms.loginMenu(lm, ms, ts);
-            while(lm.getLoginUser()!=null) {
-                mainMenu(lm.getLoginUser().getMember_name());
-                try {
-                    int select = Integer.parseInt(br.readLine());
-                    switch (select) {
-                    case 1: ts.showScreens();
-                    break; // 상영정보조회
-                    case 2: ts.ticketing(lm.getLoginUser().getMember_id());
-                    break; // 예매
-                    case 3: ts.ticketHistory(lm.getLoginUser().getMember_id());
-                    break; // 예매 내역
-                    case 4: ts.ticketingCancel(lm.getLoginUser().getMember_id());
-                    break; // 예매 취소
-                    case 5: ms.memberMenu(lm);
-                    break; // 회원정보 관리
-                    case 6: lm.loginUser(ms.logout());
-                    break; // 로그아웃
-                    default: System.out.println("입력을 확인해주세요");
-                    break;
-                    }
-                }
-                catch (Exception e) {
-                    System.out.println("잘못된 입력입니다");
-                }
+        	String str = null;
+        	ms.loginMenu(lm, ms, ts);
+        	while(lm.getLoginUser()!=null) {
+        		mainMenu(lm.getLoginUser().getMember_name());
+        		try {
+        			str = br.readLine();
+        			int select = Integer.parseInt(str);
+        			switch (select) {
+        			case 1: ts.showScreens();
+        			break; // 상영정보조회
+        			case 2: ts.ticketing(lm.getLoginUser().getMember_id());
+        			break; // 예매
+        			case 3: ts.ticketHistory(lm.getLoginUser().getMember_id());
+        			break; // 예매 내역
+        			case 4: ts.ticketingCancel(lm.getLoginUser().getMember_id());
+        			break; // 예매 취소
+        			case 5: ms.memberMenu(lm);
+        			break; // 회원정보 관리
+        			case 6: lm.loginUser(ms.logout());
+        			break; // 로그아웃
+        			default: System.out.println("입력을 확인해주세요");
+        			break;
+        			}
+        		}
+        		catch (Exception e) {
+        			if (lm.getIsAdmin() && str.equals("#")) as.menu(lm);
+        			else System.out.println("잘못된 입력입니다");
+        		}
             }
         }
     }
@@ -65,6 +74,7 @@ public class MainController {
         System.out.println("4. 예매 취소");
         System.out.println("5. 회원정보 관리");
         System.out.println("6. 로그아웃");
+        if (lm.getIsAdmin()) System.out.println("#. 관리자 메뉴");
         System.out.println("───────────────────────────────────────────────");
         System.out.println();
         System.out.print("입력: ");
