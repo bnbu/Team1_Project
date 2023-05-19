@@ -14,7 +14,6 @@ public class ConnectionSingletonHelper {
 		Properties properties = new Properties();
         Reader reader = new FileReader("./src/lib/oracle.properties"); // 읽어올 파일 지정
         properties.load(reader);
-        
         String driverName = properties.getProperty("driver");
         String url = properties.getProperty("url");
         String user = properties.getProperty("user");
@@ -42,8 +41,39 @@ public class ConnectionSingletonHelper {
 //		}
 //	}
 	
-	public static void menuHelp() {
-		System.out.println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=JDBC Query=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
-		System.out.println("0. rollback \t 1. 전체목록\t 2. 삽입\t\t 3. 수정\n4. 삭제\t\t 5. 조건 검색\t 6. 종료\t\t 9. commit");
+		public static void close() {
+			if( conn != null)
+				try {
+					conn.close();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+		}
+		
+		public static void close(Statement stmt) {
+			if( stmt != null)
+				try {
+					stmt.close();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+		}
+		
+		public static void close(PreparedStatement pstmt) {
+			if( pstmt != null)
+				try {
+					pstmt.close();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+		}
+		
+		public static void close(ResultSet rs) {
+			if( rs != null)
+				try {
+					rs.close();
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
+		}
 	}
-}

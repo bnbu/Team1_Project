@@ -7,4 +7,5 @@ public interface ITicketService {
 	void ticketHistory( String str );
 	void ticketingCancel( String str ) throws IOException;
 	void showScreens();
+	void AllClose();
 }
