@@ -6,6 +6,7 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import service.ITicketService;
@@ -74,17 +75,25 @@ public class TicketController implements ITicketService {
 	public void showMovies() {
 		try {
 			rs = pstmtTotalMovie.executeQuery();
-
-			System.out.println(String.format("%-6s│%-10s│%-10s│%-30s",
+			System.out.println("────────┬────────────┬────────────┬───────────────────────────────────────────────┐");
+			System.out.println(String.format("%-6s│%-10s│%-10s│%-45s│",
 					"번호", "장르", "연령", "제목"));
-			System.out.println("────────┼────────────┼────────────┼────────────────────────────────────────────────");
-			while (rs.next()) {
-				int len1 = 12 - rs.getString(5).length();
-				int len2 = 16 - getRankString(rs.getInt(6)).getBytes().length;
-				System.out.println(String.format("%-8s│%-" + len1 + "s│%-" + len2 + "s│%-30s",
+			System.out.println("────────┼────────────┼────────────┼───────────────────────────────────────────────┤");
+			Pattern pattern = Pattern.compile("[ㄱ-힣]");
+			while ( rs.next() ) {
+				Matcher matcher = pattern.matcher(rs.getString(2));
+				int cnt = 0;
+				while (matcher.find()) cnt++;
+				
+				
+				int len1 = 12 - rs.getString(5).length(),
+					len2 = 16 - getRankString(rs.getInt(6)).getBytes().length,
+					len3 = 47 - cnt;
+				
+				System.out.println(String.format("%-8s│%-" + len1 + "s│%-" + len2 + "s│%-" + len3 + "s│",
 						rs.getString(1), rs.getString(5), getRankString(rs.getInt(6)), rs.getString(2)));
 			}
-			System.out.println("────────┴────────────┴────────────┴────────────────────────────────────────────────");
+			System.out.println("────────┴────────────┴────────────┴───────────────────────────────────────────────┘");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -186,14 +195,15 @@ public class TicketController implements ITicketService {
 
 		// 1.선택한 영화로 상영정보를 가져온다
 		try {
-			System.out.println(String.format("%-8s│%-4s│%-14s│%-10s│%-10s", 
+			System.out.println("──────────┬───────┬────────────────┬────────────┬────────────┐");
+			System.out.println(String.format("%-8s│%-4s│%-14s│%-10s│%-10s│", 
 					"번호", "상영관", "날짜", "시작", "종료"));
-			System.out.println("──────────┼───────┼────────────────┼────────────┼────────────────────────────");
+			System.out.println("──────────┼───────┼────────────────┼────────────┼────────────┤");
 			while (rs.next()) {
-				System.out.println(String.format("%-10s│%-7s│%-16s│%-12s│%-12s",
+				System.out.println(String.format("%-10s│%-7s│%-16s│%-12s│%-12s│",
 						rs.getString(1), rs.getString(3), rs.getString(6), rs.getString(4), rs.getString(5)));
 			}
-			System.out.println("──────────┴───────┴────────────────┴────────────┴────────────────────────────");
+			System.out.println("──────────┴───────┴────────────────┴────────────┴────────────┘");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -370,21 +380,27 @@ public class TicketController implements ITicketService {
 			pstmtSearchTicketInfo.setString(1, ID);
 			rs = pstmtSearchTicketInfo.executeQuery();
 
-			System.out.println("──────────┬──────────┬────────┬─────────────┬──────────────────┬──────────────────┬────────────────────────────────────────────────");
-			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-14s│%-14s│%-60s\n","예매번호", "상영번호", "인원", "가격","예매 날짜", "취소 날짜", "제목");
-			System.out.println("──────────┼──────────┼────────┼─────────────┼──────────────────┼──────────────────┼────────────────────────────────────────────────");
-
-			while( rs.next() ) {
+			System.out.println("──────────┬──────────┬───────────────────────────────────────────────┬────────┬─────────────┬──────────────────┬──────────────────┐");
+			System.out.printf("%-6s│%-6s│%-45s│%-6s│%-11s│%-14s│%-14s│\n","예매번호", "상영번호", "제목", "인원", "가격","예매 날짜", "취소 날짜");
+			System.out.println("──────────┼──────────┼───────────────────────────────────────────────┼────────┼─────────────┼──────────────────┼──────────────────┤");
+			
+			Pattern pattern = Pattern.compile("[ㄱ-힣]");
+			while ( rs.next() ) {
+				Matcher matcher = pattern.matcher(rs.getString(7));
+				int cnt = 0;
+				while (matcher.find()) cnt++;
+				
+				int len = 47 - cnt;
 				int valid = rs.getInt(8);
 				switch ( valid  ) {
 				case 0: // 취소
-					System.out.printf("%-10s│%-10s│%-8s│%-12s│%-18s│%-18s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6), rs.getString(7));
+					System.out.printf("%-10s│%-10s│%-" + len + "s│%-8s│%-12s│%-18s│%-18s│\n",rs.getString(1), rs.getString(2), rs.getString(7), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6));
 					break;
 				case 1: //
-					System.out.printf("%-10s│%-10s│%-8s│%-12s│%-18s│                  │%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(7));
+					System.out.printf("%-10s│%-10s│%-" + len + "s│%-8s│%-12s│%-18s│                  │\n",rs.getString(1), rs.getString(2), rs.getString(7), rs.getString(3), rs.getString(4).trim(), rs.getString(5));
 					break;
 				} // end switch
-			} System.out.println("──────────┴──────────┴────────┴─────────────┴──────────────────┴──────────────────┴────────────────────────────────────────────────");
+			} System.out.println("──────────┴──────────┴───────────────────────────────────────────────┴────────┴─────────────┴──────────────────┴──────────────────┘");
 			// end while
 
 			while( true ) {
@@ -406,13 +422,19 @@ public class TicketController implements ITicketService {
 			pstmtSearchValidTicketInfo.setString(1, ID);
 			rs = pstmtSearchValidTicketInfo.executeQuery();
 
-			System.out.println("──────────┬──────────┬────────┬─────────────┬──────────────────┬────────────────────────────────────────────────");
-			System.out.printf("%-6s│%-6s│%-6s│%-11s│%-14s│%-60s\n","예매번호", "상영번호", "인원", "가격", "예매 날짜", "제목");
-			System.out.println("──────────┼──────────┼────────┼─────────────┼──────────────────┼────────────────────────────────────────────────");
-			while( rs.next() ) {
-				System.out.printf("%-10s│%-10s│%-8s│%-12s│%-18s│%-60s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4).trim(), rs.getString(5), rs.getString(6));
+			System.out.println("──────────┬──────────┬───────────────────────────────────────────────┬────────┬─────────────┬──────────────────┐");
+			System.out.printf("%-6s│%-6s│%-45s│%-6s│%-11s│%-14s│\n","예매번호", "상영번호", "제목", "인원", "가격", "예매 날짜");
+			System.out.println("──────────┼──────────┼───────────────────────────────────────────────┼────────┼─────────────┼──────────────────┤");
+			Pattern pattern = Pattern.compile("[ㄱ-힣]");
+			while ( rs.next() ) {
+				Matcher matcher = pattern.matcher(rs.getString(6));
+				int cnt = 0;
+				while (matcher.find()) cnt++;
+				
+				int len = 47 - cnt;
+				System.out.printf("%-10s│%-10s│%-" + len + "s│%-8s│%-12s│%-18s│\n",rs.getString(1), rs.getString(2), rs.getString(6), rs.getString(3), rs.getString(4).trim(), rs.getString(5));
 			};
-			System.out.println("──────────┴──────────┴────────┴─────────────┴──────────────────┴────────────────────────────────────────────────");
+			System.out.println("──────────┴──────────┴───────────────────────────────────────────────┴────────┴─────────────┴──────────────────┘");
 
 
 		} catch (SQLException e) { e.printStackTrace(); }
@@ -548,16 +570,21 @@ public class TicketController implements ITicketService {
 		try {
 			rs = pstmtTotalScreeningInfo.executeQuery();
 
-			System.out.println("──────────┬──────────┬───────────┬──────────┬──────────┬────────────────────────────────────────────────");
-			System.out.printf("%-8s│%-6s│%-6s│%-8s│%-8s│%-60s\n","번호", "상영날짜", "상영관번호", "시작", "종료", "제목");
-			System.out.print("──────────┼──────────┼───────────┼──────────┼──────────┼────────────────────────────────────────────────");
+			System.out.println("──────────┬──────────┬───────────────────────────────────────────────┬───────────┬──────────┬──────────┐");
+			System.out.printf("%-8s│%-6s│%-45s│%-6s│%-8s│%-8s│\n","번호", "상영날짜", "제목", "상영관번호", "시작", "종료");
+			System.out.print("──────────┼──────────┼───────────────────────────────────────────────┼───────────┼──────────┼──────────┤");
 
 			System.out.println();
+			Pattern pattern = Pattern.compile("[ㄱ-힣]");
 			while ( rs.next() ) {
-
-				System.out.printf("%-10s│%-10s│%-11s│%-10s│%-10s│%-60s\n",rs.getString(1), rs.getString(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(2));
+				Matcher matcher = pattern.matcher(rs.getString(2));
+				int cnt = 0;
+				while (matcher.find()) cnt++;
+				
+				int len = 47 - cnt;
+				System.out.printf("%-10s│%-10s│%-" + len + "s│%-11s│%-10s│%-10s│\n",rs.getString(1), rs.getString(3), rs.getString(2), rs.getString(4), rs.getString(5), rs.getString(6));
 			}
-			System.out.println("──────────┴──────────┴───────────┴──────────┴──────────┴────────────────────────────────────────────────");
+			System.out.println("──────────┴──────────┴───────────────────────────────────────────────┴───────────┴──────────┴──────────┘");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

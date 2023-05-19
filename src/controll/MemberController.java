@@ -48,116 +48,139 @@ public class MemberController implements IMemberService {
  
     @Override
     public void register() throws IOException, NoSuchAlgorithmException {
-      SHA256 sha256 = new SHA256();
-      	try {
-      		System.out.println("영문자와 숫자를 조합하여 6자이상 20자 이하로 입력하십시오");
-       		String member_Id = null;
-	        while(true) {
-	        	System.out.print("ID: ");
-	        	member_Id = br.readLine();
-			    String mid = "^[a-z]+[a-z0-9]{5,19}$";
-			    boolean account = Pattern.matches(mid, member_Id);
-			    	
-			    if (!account) {
-			        System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
-				    continue;
-				}
-			    pstmtInsertMember.setString(1, member_Id);
-			    break;
-			}
+        SHA256 sha256 = new SHA256();
+           System.out.println("회원가입을 선택하셨습니다.");
+               String member_Id = null;
+           System.out.println("초기메뉴로 돌아가기 : q");
+              while (true) {
+                 System.out.print("ID: ");
+                 member_Id = br.readLine();
+                 if(member_Id.equalsIgnoreCase("q")) {
+                    return;
+                 }
+                  String mid = "^[a-z]+[a-z0-9]{5,19}$";
+                  boolean account = Pattern.matches(mid, member_Id);
+                      
+                  if (!account) {
+                      System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                     continue;
+                 }
+                  
+                  try {
+                    pstmtInsertMember.setString(1, member_Id);
+                 } catch (SQLException e) {}
+                  break;
+              
+              }
+              
+              try {
+          
+            System.out.println("최소 8 자, 하나 이상의 문자와 하나의 숫자,특수문자 !,@,$,!,%,*,#,^,?,& 를 이용하여  입력하십시오");
+             String member_Pwd = null;//최소 8 자, 하나 이상의 문자와 하나의 숫자,
+             while(true) {
+                System.out.print("PassWord: ");
+                member_Pwd = br.readLine();
+              if(member_Pwd.equalsIgnoreCase("q")) {
+                 return;
+              }
+                String mpwd= "^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$";
+                boolean password = Pattern.matches(mpwd, member_Pwd);
+                
+                if (!password) {
+                    System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                    continue;
+                }
+                break;
+             }
+             System.out.println("비밀번호를 한번 더 입력해 주십시오.");
+             while(true) {
+                System.out.print("PassWord Confirm: ");
+                if (!br.readLine().equals(member_Pwd)) {
+                   System.out.println("비밀번호가 다릅니다.");
+                   continue;
+                }
+                pstmtInsertMember.setString(3, sha256.encrypt(member_Pwd));
+                break;
+             }
+             
+             
+             String member_Name = null;
+             while(true) {
+             System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
+             System.out.print("Name: ");
+             member_Name  = br.readLine();
+           if(member_Name.equalsIgnoreCase("q")) {
+                 return;
+           }
+             
+             String mnf= "(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*${1,16})";
+             boolean nameformat = Pattern.matches(mnf, member_Name);
+             
+             if (!nameformat) {
+                 System.out.println("잘못된 이름형식 입니다.");
+                 
+                 continue;
+             }
+             pstmtInsertMember.setString(2, member_Name);
+             break;
+             }
+          
+            String member_Phone = null; 
+             while(true) {
+                System.out.println("형식 000-0000-0000 으로 입력해 주십시오");
+                System.out.print("Phone: ");
+              member_Phone = br.readLine();
+               if(member_Phone.equalsIgnoreCase("q")) {
+                     return;
+               }
+                
+                String mpho = "^\\d{3}-\\d{4}-\\d{4}$";
+                boolean phonenumber = Pattern.matches(mpho, member_Phone);
+                
+                if (!phonenumber) {
+                    System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                    
+                    continue;
+                }
+                pstmtInsertMember.setString(4, member_Phone);
+             break;
+             }
+          
+          
+          
+             String member_Birthday = null;
+             while(true) {
+                try {
+                   System.out.println("주민등록번호 앞자리 6글자만 입력하십시오.");
+                   System.out.print("Birthday: ");
+                   member_Birthday = br.readLine();
+                  if(member_Birthday.equalsIgnoreCase("q")) {
+                        return;
+                  }
+                   String mbd = "([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))";
+                   boolean memberbirthday = Pattern.matches(mbd, member_Birthday);
+                   
+                   if (!memberbirthday) {
+                      System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                      continue;
+                   }
+                   pstmtInsertMember.setString(5, member_Birthday);
+                   pstmtInsertMember.executeUpdate();
+                   break;
+                }
+                catch (IOException e) {
+                   System.out.println("잘못된 입력입니다");
+                }
+                catch (SQLException e) {
+                   System.out.println("날짜를 다시 확인해주세요");
+                }
+             }
+             
+           } catch (Exception e) {
         
-		    System.out.println("최소 8 자, 하나 이상의 문자와 하나의 숫자,특수문자 !,@,$,!,%,*,#,^,?,& 를 이용하여  입력하십시오");
-	        String member_Pwd = null;//최소 8 자, 하나 이상의 문자와 하나의 숫자,
-	        while(true) {
-	        	System.out.print("PassWord: ");
-	        	member_Pwd = br.readLine();
-		        String mpwd= "^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$";
-		        boolean password = Pattern.matches(mpwd, member_Pwd);
-		        
-		        if (!password) {
-		            System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
-		            
-		            continue;
-		        }
-		        break;
-	        }
-	        System.out.println("비밀번호를 한번 더 입력해 주십시오.");
-	        while(true) {
-	        	System.out.print("PassWord Confirm: ");
-	        	if (!br.readLine().equals(member_Pwd)) {
-	        		System.out.println("비밀번호가 다릅니다.");
-	        		continue;
-	        	}
-	        	pstmtInsertMember.setString(3, sha256.encrypt(member_Pwd));
-	        	break;
-	        }
-	        
-	        
-        String member_Name = null;
-        while(true) {
-        	System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
-        	System.out.print("Name: ");
-        	member_Name = br.readLine();
-	        String mnf= "(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*${1,16})";
-	        boolean nameformat = Pattern.matches(mnf, member_Name);
-	        
-	        if (!nameformat) {
-	            System.out.println("잘못된 이름형식 입니다.");
-	            
-	            continue;
-	        }
-	        pstmtInsertMember.setString(2, member_Name);
-	        break;
-        }
-        
-	    String member_Phone = null; 
-        while(true) {
-        	System.out.println("형식 000-0000-0000 으로 입력해 주십시오");
-        	System.out.print("Phone: ");
-	       member_Phone = br.readLine();
-	        String mpho = "^\\d{3}-\\d{4}-\\d{4}$";
-	        boolean phonenumber = Pattern.matches(mpho, member_Phone);
-	        
-	        if (!phonenumber) {
-	            System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
-	            
-	            continue;
-	        }
-	        pstmtInsertMember.setString(4, member_Phone);
-        break;
-        }
-        
-        
-        
-        String member_Birthday = null;
-        while(true) {
-        	try {
-        		System.out.println("주민등록번호 앞자리 6글자만 입력하십시오.");
-        		System.out.print("Birthday: ");
-        		member_Birthday = br.readLine();
-        		String mbd = "([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))";
-        		boolean memberbirthday = Pattern.matches(mbd, member_Birthday);
-        		
-        		if (!memberbirthday) {
-        			System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
-        			continue;
-        		}
-        		pstmtInsertMember.setString(5, member_Birthday);
-        		pstmtInsertMember.executeUpdate();
-        		break;
-        	}
-        	catch (IOException e) {
-        		System.out.println("잘못된 입력입니다");
-        	}
-        	catch (SQLException e) {
-        		System.out.println("날짜를 다시 확인해주세요");
-        	}
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
+           }
       }
-      	
-    }
+
 
     @Override
     public MemberVO login() throws IOException {
@@ -325,30 +348,7 @@ public class MemberController implements IMemberService {
 		}
 
 	}
-
-	public class TelTest {
-		public static String telNumber(String number) {
-			// 전화번호 정규표현식으로 제한
-			String regEx = "(\\d{2,3})(\\d{3,4})(\\d{4})";
-
-			if (!Pattern.matches(regEx, number)) {
-				System.out.println("에러 1 : 형식 오류 ====> " + number.toString());
-				return null;
-			}
-
-			// 지역번호가 02이면서 9자리 수일 때 == not error
-			if (number.substring(0, 2).contains("02") && number.length() == 9) {
-				return number.replaceAll(regEx, "$1-$2-$3"); // 출력 xxx-xxx-xxxx
-			}
-
-			// 지역번호 02를 제외한 번호 (070,031,064 ...) 가 9자리 일 때 == > 에러
-			else if (number.length() == 9) {
-				System.out.println("에러 2 : 자릿수 입력 오류 ====> " + number.toString());
-				return null;
-			}
-			return number.replaceAll(regEx, "$1-$2-$3"); // 출력 xxx-xxxx-xxxx
-		}
-	}
+	
 	private void menu() {
 	    sb.setLength(0);
 	    sb.append("───────────────────회원 관리───────────────────").append("\n");
