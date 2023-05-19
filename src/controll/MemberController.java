@@ -10,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import model.MemberVO;
@@ -27,13 +26,13 @@ public class MemberController implements IMemberService {
     private MemberVO vo;
     private PreparedStatement pstmtInsertMember, pstmtSelectMemberValid, pstmtUpdateMemberLoginInfo, pstmtSelectMember, pstmtUpdateMember, pstmtDeleteMember,pstmtSelectLikeByid;
     private final String sqlInsertMember = "INSERT INTO MEMBER (member_id, member_name, member_pwd, member_phone, member_birthday) VALUES(?,?,?,?,?)", 
-            sqlSelectMemberValid = "SELECT MEMBER_ID,MEMBER_PWD,MEMBER_VALID FROM MEMBER WHERE MEMBER_ID=? AND MEMBER_PWD=? AND MEMBER_VALID=?",
+            sqlSelectMemberValid = "SELECT MEMBER_ID,MEMBER_NAME,MEMBER_VALID FROM MEMBER WHERE MEMBER_ID=? AND MEMBER_PWD=? AND MEMBER_VALID=?",
             sqlUpdateMemberLoginInfo = "UPDATE MEMBER SET MEMBER_VALID= ? WHERE MEMBER_ID = ?",
             sqlSelectMember = "SELECT member_id, member_name,member_phone,member_birthday FROM MEMBER WHERE MEMBER_ID=?",
             sqlSelectLikeByid = "select member_id from member where member_id like '%'||?||'%'",
             sqlUpdateMember = "UPDATE MEMBER SET MEMBER_NAME=?, MEMBER_PWD=?,MEMBER_PHONE=?,MEMBER_BIRTHDAY=? WHERE MEMBER_ID=?",
             sqlDeleteMember = "UPDATE MEMBER SET MEMBER_VALID=3 WHERE MEMBER_ID=?";
-    
+
     public MemberController() throws Exception {
         conn = ConnectionSingletonHelper.getConnection();
         br = new BufferedReader(new InputStreamReader(System.in));
@@ -47,193 +46,168 @@ public class MemberController implements IMemberService {
         pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
         pstmtSelectLikeByid = conn.prepareStatement(sqlSelectLikeByid);
     }
- 
+
     @Override
     public void register() throws IOException, NoSuchAlgorithmException {
         SHA256 sha256 = new SHA256();
-           System.out.println("회원가입을 선택하셨습니다.");
-               String member_Id = null;
-           System.out.println("초기메뉴로 돌아가기 : q");
-              while (true) {
-                 System.out.print("ID: ");
-                 member_Id = br.readLine();
-                 if(member_Id.equalsIgnoreCase("q")) {
-                    return;
-                 }
-                  String mid = "^[a-z]+[a-z0-9]{5,19}$";
-                  boolean account = Pattern.matches(mid, member_Id);
-                      
-                  if (!account) {
-                      System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
-                     continue;
-                 }
-                  
-                  try {
-                    pstmtInsertMember.setString(1, member_Id);
-                 } catch (SQLException e) {}
-                  break;
-              
-              }
-              
-              try {
-          
+        try {
+            String memberId = null,
+                    memberPwd = null,//최소 8 자, 하나 이상의 문자와 하나의 숫자,
+                    memberName = null,
+                    memberPhone = null, 
+                    memberBirthday = null;
+            System.out.println("회원가입을 선택하셨습니다.");
+            System.out.println("영문자와 숫자를 조합하여 6자이상 20자 이하로 입력하십시오");
+            System.out.println("초기메뉴로 돌아가기 : q");
+            while (true) {
+                System.out.print("ID: ");
+                memberId = br.readLine();
+                if(memberId.equalsIgnoreCase("q")) return;
+                if (!isValid("^[a-z]+[a-z0-9]{5,19}$",memberId)) {
+                    System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                    continue;
+                }
+
+                pstmtSelectLikeByid.setString(1, memberId);
+                ResultSet rs = pstmtSelectLikeByid.executeQuery();
+                if(rs.isBeforeFirst()) {
+                    System.out.println("이미 존재하는 아이디입니다.");
+                    continue;
+                }
+
+                pstmtInsertMember.setString(1, memberId);
+                break;
+            }
+
             System.out.println("최소 8 자, 하나 이상의 문자와 하나의 숫자,특수문자 !,@,$,!,%,*,#,^,?,& 를 이용하여  입력하십시오");
-             String member_Pwd = null;//최소 8 자, 하나 이상의 문자와 하나의 숫자,
-             while(true) {
+            while(true) {
                 System.out.print("PassWord: ");
-                member_Pwd = br.readLine();
-              if(member_Pwd.equalsIgnoreCase("q")) {
-                 return;
-              }
-                String mpwd= "^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$";
-                boolean password = Pattern.matches(mpwd, member_Pwd);
-                
-                if (!password) {
+                memberPwd = br.readLine();
+                if(memberPwd.equalsIgnoreCase("q")) return;
+                if (!isValid("^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$", memberPwd)) {
                     System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
                     continue;
                 }
                 break;
-             }
-             System.out.println("비밀번호를 한번 더 입력해 주십시오.");
-             while(true) {
+            }
+
+            System.out.println("비밀번호를 한번 더 입력해 주십시오.");
+            while(true) {
                 System.out.print("PassWord Confirm: ");
-                if (!br.readLine().equals(member_Pwd)) {
-                   System.out.println("비밀번호가 다릅니다.");
-                   continue;
-                }
-                pstmtInsertMember.setString(3, sha256.encrypt(member_Pwd));
-                break;
-             }
-             
-             
-             String member_Name = null;
-             while(true) {
-             System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
-             System.out.print("Name: ");
-             member_Name  = br.readLine();
-           if(member_Name.equalsIgnoreCase("q")) {
-                 return;
-           }
-             
-             String mnf= "(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*${1,16})";
-             boolean nameformat = Pattern.matches(mnf, member_Name);
-             
-             if (!nameformat) {
-                 System.out.println("잘못된 이름형식 입니다.");
-                 
-                 continue;
-             }
-             pstmtInsertMember.setString(2, member_Name);
-             break;
-             }
-          
-            String member_Phone = null; 
-             while(true) {
-                System.out.println("형식 000-0000-0000 으로 입력해 주십시오");
-                System.out.print("Phone: ");
-              member_Phone = br.readLine();
-               if(member_Phone.equalsIgnoreCase("q")) {
-                     return;
-               }
-                
-                String mpho = "^\\d{3}-\\d{4}-\\d{4}$";
-                boolean phonenumber = Pattern.matches(mpho, member_Phone);
-                
-                if (!phonenumber) {
-                    System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
-                    
+                if (!br.readLine().equals(memberPwd)) {
+                    System.out.println("비밀번호가 다릅니다.");
                     continue;
                 }
-                pstmtInsertMember.setString(4, member_Phone);
-             break;
-             }
-          
-          
-          
-             String member_Birthday = null;
-             while(true) {
+                pstmtInsertMember.setString(3, sha256.encrypt(memberPwd));
+                break;
+            }
+
+            System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
+            while(true) {
+                System.out.print("Name: ");
+                memberName  = br.readLine();
+                if(memberName.equalsIgnoreCase("q")) return;
+                if (!isValid("(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*${1,16})", memberName)) {
+                    System.out.println("잘못된 이름형식 입니다.");
+                    continue;
+                }
+                pstmtInsertMember.setString(2, memberName);
+                break;
+            }
+
+            System.out.println("형식 000-0000-0000 으로 입력해 주십시오");
+            while(true) {
+                System.out.print("Phone: ");
+                memberPhone = br.readLine();
+                if(memberPhone.equalsIgnoreCase("q")) return;
+                if (!isValid("^\\d{3}-\\d{4}-\\d{4}$", memberPhone)) {
+                    System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                    continue;
+                }
+                pstmtInsertMember.setString(4, memberPhone);
+                break;
+            }
+
+            System.out.println("주민등록번호 앞자리 6글자만 입력하십시오.");
+            while(true) {
                 try {
-                   System.out.println("주민등록번호 앞자리 6글자만 입력하십시오.");
-                   System.out.print("Birthday: ");
-                   member_Birthday = br.readLine();
-                  if(member_Birthday.equalsIgnoreCase("q")) {
-                        return;
-                  }
-                   String mbd = "([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))";
-                   boolean memberbirthday = Pattern.matches(mbd, member_Birthday);
-                   
-                   if (!memberbirthday) {
-                      System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
-                      continue;
-                   }
-                   pstmtInsertMember.setString(5, member_Birthday);
-                   pstmtInsertMember.executeUpdate();
-                   break;
+                    System.out.print("Birthday: ");
+                    memberBirthday = br.readLine();
+                    if(memberBirthday.equalsIgnoreCase("q")) return;
+                    if (!isValid("([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))", memberBirthday)) {
+                        System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                        continue;
+                    }
+
+                    pstmtInsertMember.setString(5, memberBirthday);
+                    break;
                 }
                 catch (IOException e) {
-                   System.out.println("잘못된 입력입니다");
+                    System.out.println("잘못된 날짜 입력입니다");
                 }
-                catch (SQLException e) {
-                   System.out.println("날짜를 다시 확인해주세요");
-                }
-             }
-             
-           } catch (Exception e) {
-        
-           }
+            }
+            pstmtInsertMember.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("다시 시도해주세요");
+            return;
+        }
+    }
+
+    private boolean isValid(String pattern, String member_Id) {
+        return Pattern.matches(pattern, member_Id);
     }
 
     @Override
     public MemberVO login() throws IOException {
-    	 SHA256 sha256 = new SHA256();
-    	 vo = new MemberVO();
+        SHA256 sha256 = new SHA256();
+        vo = new MemberVO();
 
-      try {
-        System.out.print("ID: ");
-        String member_Id = br.readLine();
-        System.out.print("PassWord: ");
-        String member_Pwd = br.readLine();
-   
-        pstmtSelectMemberValid.setString(1, member_Id);
-        pstmtSelectMemberValid.setString(2, sha256.encrypt(member_Pwd));
-        pstmtSelectMemberValid.setInt(3, 0);
-        ResultSet rs = pstmtSelectMemberValid.executeQuery();
+        try {
+            System.out.print("ID: ");
+            String memberId = br.readLine();
+            System.out.print("PassWord: ");
+            String memberPwd = br.readLine();
 
-        if (!rs.isBeforeFirst()) {
-          System.out.println("로그인이 되지않았습니다.");
-          return null;
-        }
+            pstmtSelectMemberValid.setString(1, memberId);
+            pstmtSelectMemberValid.setString(2, sha256.encrypt(memberPwd));
+            pstmtSelectMemberValid.setInt(3, 0);
+            ResultSet rs = pstmtSelectMemberValid.executeQuery();
 
-        while (rs.next()) {
-          vo.setMember_id(rs.getString(1));
-          vo.setMember_pwd(rs.getString(2));
-          vo.setMember_valid(rs.getInt(3));
-        }
-       
-        pstmtUpdateMemberLoginInfo.setInt(1, 1);
-        pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
-        pstmtUpdateMemberLoginInfo.executeUpdate();
-        System.out.println("로그인이 되었습니다.");
-      } catch (Exception e) {
-        e.printStackTrace();
-      } 
-    return vo;
+            if (!rs.isBeforeFirst()) {
+                System.out.println("다시 시도해주세요.");
+                return null;
+            }
+
+            while (rs.next()) {
+                vo.setMember_id(rs.getString(1));
+                vo.setMember_name(rs.getString(2));
+                vo.setMember_valid(rs.getInt(3));
+            }
+
+            pstmtUpdateMemberLoginInfo.setInt(1, 1);
+            pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
+            pstmtUpdateMemberLoginInfo.executeUpdate();
+            System.out.println("로그인이 되었습니다.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } 
+        return vo;
     }
 
     @Override
     public MemberVO logout() {
-      try {
-        pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo );
-        pstmtUpdateMemberLoginInfo.setInt(1, 0);
-        pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
-        pstmtUpdateMemberLoginInfo.executeUpdate();
-        vo = null;
-        System.out.println("로그아웃 되었습니다.");
+        try {
+            pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo );
+            pstmtUpdateMemberLoginInfo.setInt(1, 0);
+            pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
+            pstmtUpdateMemberLoginInfo.executeUpdate();
+            vo = null;
+            System.out.println("로그아웃 되었습니다.");
+            return vo;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return vo;
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-      return vo;
     }
 
     @Override
@@ -265,11 +239,15 @@ public class MemberController implements IMemberService {
     @Override
     public void editProfile() throws IOException {
         SHA256 sha256 = new SHA256();
+        String memberName=null,
+                memberPwd=null,
+                memberPhone=null,
+                memberBirthday=null;
         try {
             System.out.println("───────────────────회원정보 수정───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
-            
+
             pstmtSelectMemberValid.setString(1, vo.getMember_id());
             pstmtSelectMemberValid.setString(2, pwd);
             pstmtSelectMemberValid.setInt(3, 1);
@@ -278,17 +256,63 @@ public class MemberController implements IMemberService {
                 System.out.println("비밀번호가 틀렸습니다.");
                 return;
             }
-            
-          
-            pstmtUpdateMember.setString(5, vo.getMember_id());
-            System.out.print("이름: ");
-            pstmtUpdateMember.setString(1, br.readLine());
-            System.out.print("비밀번호: ");
-            pstmtUpdateMember.setString(2, sha256.encrypt(br.readLine()));
-            System.out.print("전화번호: ");
-            pstmtUpdateMember.setString(3, br.readLine());
-            System.out.print("생일: ");
-            pstmtUpdateMember.setString(4, br.readLine());
+            pstmtUpdateMember.setString(5, vo.getMember_id()); 
+
+            System.out.println("이름은 최대 16자까지 입력이 가능합니다.");
+            while(true) {
+                System.out.print("이름: ");
+                memberName  = br.readLine();
+                if(memberName.equalsIgnoreCase("q")) return;
+                if (!isValid("(^[a-zA-Zㄱ-힣][a-zA-Zㄱ-힣 ]*${1,16})", memberName)) {
+                    System.out.println("잘못된 이름형식 입니다.");
+                    continue;
+                }
+                pstmtUpdateMember.setString(1, memberName);
+                break;
+            }
+            System.out.println("최소 8 자, 하나 이상의 문자와 하나의 숫자,특수문자 !,@,$,!,%,*,#,^,?,& 를 이용하여  입력하십시오");
+            while(true) {
+                System.out.print("PassWord: ");
+                memberPwd = br.readLine();
+                if(memberPwd.equalsIgnoreCase("q")) return;
+                if (!isValid("^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)-_=+]).{8,16}$", memberPwd)) {
+                    System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                    continue;
+                }
+                pstmtUpdateMember.setString(2, sha256.encrypt(memberPwd)); 
+                break;
+            }
+
+            System.out.println("형식 000-0000-0000 으로 입력해 주십시오");
+            while(true) {
+                System.out.print("Phone: ");
+                memberPhone = br.readLine();
+                if(memberPhone.equalsIgnoreCase("q")) return;
+                if (!isValid("^\\d{3}-\\d{4}-\\d{4}$", memberPhone)) {
+                    System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                    continue;
+                }
+                pstmtUpdateMember.setString(3, memberPhone); //System.out.print("전화번호: "); 
+                break;
+            }
+
+            System.out.println("주민등록번호 앞자리 6글자만 입력하십시오.");
+            while(true) {
+                try {
+                    System.out.print("Birthday: ");
+                    memberBirthday = br.readLine();
+                    if(memberBirthday.equalsIgnoreCase("q")) return;
+                    if (!isValid("([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[1,2][0-9]|3[0,1]))", memberBirthday)) {
+                        System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
+                        continue;
+                    }
+                    pstmtUpdateMember.setString(4, memberBirthday); //System.out.print("생일: ");
+                    break;
+                }
+                catch (IOException e) {
+                    System.out.println("잘못된 날짜 입력입니다");
+                }
+            }
 
             int result = pstmtUpdateMember.executeUpdate();
             System.out.println(result + "개 업데이트 성공");
@@ -308,7 +332,7 @@ public class MemberController implements IMemberService {
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine());
             System.out.println(pwd);
-            
+
             pstmtSelectMemberValid.setString(1, vo.getMember_id());
             pstmtSelectMemberValid.setString(2, pwd);
             pstmtSelectMemberValid.setInt(3, 1);
@@ -317,10 +341,10 @@ public class MemberController implements IMemberService {
                 System.out.println("비밀번호가 틀렸습니다.");
                 return;
             }
-            
-            
+
+
             pstmtDeleteMember.setString(1, vo.getMember_id());
-            
+
             int result = pstmtDeleteMember.executeUpdate();
             System.out.println(result<1?"다시 시도해주세요":"탈퇴 처리되었습니다");
             vo = null;
@@ -332,40 +356,41 @@ public class MemberController implements IMemberService {
         }
     }
 
-	public class SHA256 {
-		public String encrypt(String text) throws NoSuchAlgorithmException {
-			MessageDigest md = MessageDigest.getInstance("SHA-256");
-			md.update(text.getBytes());
+    public class SHA256 {
+        public String encrypt(String text) throws NoSuchAlgorithmException {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(text.getBytes());
+            return bytesToHex(md.digest());
+        }
 
-			return bytesToHex(md.digest());
-		}
+        private String bytesToHex(byte[] bytes) {
+            StringBuilder builder = new StringBuilder();
+            for (byte b : bytes) {
+                builder.append(String.format("%02x", b));
+            }
+            return builder.toString();
+        }
 
-		private String bytesToHex(byte[] bytes) {
-			StringBuilder builder = new StringBuilder();
-			for (byte b : bytes) {
-				builder.append(String.format("%02x", b));
-			}
-			return builder.toString();
-		}
+    }
 
-	}
-	
-	private void menu() {
-	    sb.setLength(0);
-	    sb.append("───────────────────회원 관리───────────────────").append("\n");
-	    sb.append("1. 회원정보 조회").append("\n");
-	    sb.append("2. 회원정보 수정").append("\n");
-	    sb.append("3. 회원탈퇴").append("\n");
-	    sb.append("4. 돌아가기").append("\n");
-	    sb.append("───────────────────────────────────────────────").append("\n\n");
+    private void menu() {
+        sb.setLength(0);
+        sb.append("───────────────────────────────────────────────").append("\n");
+        sb.append(String.format("                  회원관리        %s님",vo.getMember_name() )).append("\n");
+        sb.append("───────────────────────────────────────────────").append("\n");
+        sb.append("1. 회원정보 조회").append("\n");
+        sb.append("2. 회원정보 수정").append("\n");
+        sb.append("3. 회원탈퇴").append("\n");
+        sb.append("4. 돌아가기").append("\n");
+        sb.append("───────────────────────────────────────────────").append("\n\n");
         sb.append("입력: ");
         System.out.print(sb);
     }
 
-	private void menu2() {
-	    sb.setLength(0);
+    private void menu2() {
+        sb.setLength(0);
         sb.append("───────────────────────────────────────────────").append("\n");
-        sb.append("             영화 예매 시스템 시작").append("\n");
+        sb.append("             영화 예매 시스템").append("\n");
         sb.append("───────────────────────────────────────────────").append("\n");
         sb.append("1. 회원가입").append("\n");
         sb.append("2. 로그인").append("\n");
@@ -374,41 +399,41 @@ public class MemberController implements IMemberService {
         sb.append("입력: ");
         System.out.print(sb);
     }
-	
-	public void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts) throws NumberFormatException, IOException {
+
+    public void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts) throws NumberFormatException, IOException {
         while (true) {
             menu2();
-           try {
-        	   switch (Integer.parseInt(br.readLine())) {
-        	   case 1:
-        		   try {
-        			   register();
-        		   } catch (NoSuchAlgorithmException e) {
-        			   e.printStackTrace();
-        		   } catch (IOException e) {
-        			   e.printStackTrace();
-        		   }
-        		   break; // 회원가입
-        	   case 2:
-        		   lm.loginUser(login());
-        		   if(lm.getLoginUser()!=null)return;
-        		   break; // 로그인
-        	   case 3: System.out.println("시스템을 종료합니다.");
-        	   ms.AllClose(); ts.AllClose();
-        	   ConnectionSingletonHelper.close();
-        	   System.exit(0);
-        	   return;
-        	   default: System.out.println("입력을 확인해주세요.");
-        	   break;
-        	   } // switch end
-			
-		} catch (Exception e) {
-			System.out.println("잘못된 입력입니다.");
-		}
+            try {
+                switch (Integer.parseInt(br.readLine())) {
+                case 1:
+                    try {
+                        register();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break; // 회원가입
+                case 2:
+                    lm.loginUser(login());
+                    if(lm.getLoginUser()!=null)return;
+                    break; // 로그인
+                case 3: System.out.println("시스템을 종료합니다.");
+                ms.AllClose(); ts.AllClose();
+                ConnectionSingletonHelper.close();
+                System.exit(0);
+                return;
+                default: System.out.println("입력을 확인해주세요.");
+                break;
+                } // switch end
+
+            } catch (Exception e) {
+                System.out.println("잘못된 입력입니다.");
+            }
         } // while end
     }
 
-    
+
 
     @Override
     public void memberMenu(LoginManager lm) throws NumberFormatException, IOException {
@@ -435,12 +460,12 @@ public class MemberController implements IMemberService {
         } // while end
     }
     @Override
-	public void AllClose() {
-    	ConnectionSingletonHelper.close(pstmtInsertMember);
-    	ConnectionSingletonHelper.close(pstmtSelectMemberValid);
-    	ConnectionSingletonHelper.close(pstmtUpdateMemberLoginInfo);
-    	ConnectionSingletonHelper.close(pstmtSelectMember);
-    	ConnectionSingletonHelper.close(pstmtUpdateMember);
-    	ConnectionSingletonHelper.close(pstmtDeleteMember);
+    public void AllClose() {
+        ConnectionSingletonHelper.close(pstmtInsertMember);
+        ConnectionSingletonHelper.close(pstmtSelectMemberValid);
+        ConnectionSingletonHelper.close(pstmtUpdateMemberLoginInfo);
+        ConnectionSingletonHelper.close(pstmtSelectMember);
+        ConnectionSingletonHelper.close(pstmtUpdateMember);
+        ConnectionSingletonHelper.close(pstmtDeleteMember);
     }
 }
