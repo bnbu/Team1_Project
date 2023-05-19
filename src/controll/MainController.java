@@ -57,7 +57,7 @@ public class MainController {
         			}
         		}
         		catch (Exception e) {
-        			if (lm.getIsAdmin() && str.equals("#")) as.menu();
+        			if (lm.getIsAdmin() && str.equals("#")) as.menu(lm);
         			else System.out.println("잘못된 입력입니다");
         		}
             }

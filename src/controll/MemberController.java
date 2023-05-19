@@ -36,7 +36,7 @@ public class MemberController implements IMemberService {
             sqlSelectLikeByid = "select member_id from member where member_id like '%'||?||'%'",
             sqlUpdateMember = "UPDATE MEMBER SET MEMBER_NAME=?, MEMBER_PWD=?,MEMBER_PHONE=?,MEMBER_BIRTHDAY=? WHERE MEMBER_ID=?",
             sqlDeleteMember = "UPDATE MEMBER SET MEMBER_VALID=3 WHERE MEMBER_ID=?",
-            sqlSearchAdmin = "SELECT COUNT(*) FROM ADMIN WHERE MEMBER_ID = ?";
+            sqlSearchAdmin = "SELECT \"flag\" FROM ADMIN WHERE MEMBER_ID = ?";
 
     public MemberController() throws Exception {
         conn = ConnectionSingletonHelper.getConnection();
@@ -426,8 +426,10 @@ public class MemberController implements IMemberService {
                     if(lm.getLoginUser()!=null) {
                     	pstmtSearchAdmin.setString(1, lm.getLoginUser().getMember_id());
                     	rs = pstmtSearchAdmin.executeQuery();
-                    	rs.next();
-                    	lm.setIsAdmin(rs.getInt(1) == 1);
+                    	if(rs.next()) {
+                    	    lm.setIsAdmin(true);
+                    	    lm.setFlag(rs.getInt(1));
+                    	}
                     	return;
                     }
                     break; // 로그인
@@ -441,6 +443,7 @@ public class MemberController implements IMemberService {
                 } // switch end
 
             } catch (Exception e) {
+                e.printStackTrace();
                 System.out.println("잘못된 입력입니다.");
             }
         } // while end

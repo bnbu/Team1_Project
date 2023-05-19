@@ -1,5 +1,7 @@
 package service;
 
+import util.LoginManager;
+
 public interface IAdminService {
     //영화추가
     void addMovie();
@@ -10,5 +12,5 @@ public interface IAdminService {
     //권능취소
     void cancel();
     
-    void menu();
+    void menu(LoginManager lm);
 }
