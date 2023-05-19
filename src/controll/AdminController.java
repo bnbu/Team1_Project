@@ -264,8 +264,8 @@ public class AdminController implements IAdminService {
 
     @Override
     public void menu() {
-        addMovie();
     	addScreeningInfo();
+//        addMovie();
     }
 
 }
