@@ -18,6 +18,7 @@ import service.IMemberService;
 import service.ITicketService;
 import util.ConnectionSingletonHelper;
 import util.LoginManager;
+import util.SHA256;
 
 public class MemberController implements IMemberService {
     private static Connection conn;
