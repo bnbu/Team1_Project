@@ -354,23 +354,33 @@ public class AdminController implements IAdminService {
     				break;
     				
     			case 2:
-    				try {
-    				System.out.println("월별 매출 조회를 선택하셨습니다.");
-    				System.out.print("조회하고자 하는 월을 입력하십시오 : ");
-    				int inputMonths = Integer.parseInt(br.readLine());
-    				pstmtSelectMonths.setInt(1, inputMonths - 1);
-    				rs = pstmtSelectMonths.executeQuery();
-    				rs.next();
-   				 	System.out.println("──────────"+String.format("%02d ", inputMonths) +"월별 매출 조회───────────");
-   					System.out.println(String.format("%02d ", inputMonths)+"월별 매출 ┃ "+rs.getInt(1));   				 	
-   				 	System.out.println("──────────────────────────────────────");
-    				break;
-    				}catch(Exception e) {
-    					System.out.println("잘못된 입력양식입니다.");
-    				}
+    			    try {
+    			        System.out.println("월별 매출 조회를 선택하셨습니다.");
+    			        int inputMonths;
+    			        boolean validInput;
+
+    			        do {
+    			            System.out.print("조회하고자 하는 월을 입력하십시오 : ");
+    			            inputMonths = Integer.parseInt(br.readLine());
+    			            validInput = (0 < inputMonths && inputMonths <= 12);
+
+    			            if (!validInput) {
+    			                System.out.println("잘못된 입력양식입니다. 다시 입력해 주십시오");
+    			            }
+    			        } while (!validInput);
+
+    			        pstmtSelectMonths.setInt(1, inputMonths - 1);
+    			        rs = pstmtSelectMonths.executeQuery();
+    			        rs.next();
+    			        System.out.println("──────────"+String.format("%02d ", inputMonths) +"월별 매출 조회───────────");
+    			        System.out.println(String.format("%02d ", inputMonths)+"월별 매출 ┃ "+rs.getInt(1));    
+    			        System.out.println("──────────────────────────────────────");
+    			        break;
+    			    } catch(Exception e) {
+    			        System.out.println("잘못된 입력양식입니다.");
+    			    }
     			}
-    			break;
-     		}
+    		}
     		catch(Exception e) {
     			System.out.println("잘못된 입력방식입니다. \n다시 입력하십시오");
     		} 
