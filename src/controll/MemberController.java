@@ -208,7 +208,8 @@ public class MemberController implements IMemberService {
             pstmtUpdateMemberLoginInfo.setInt(1, 0);
             pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
             pstmtUpdateMemberLoginInfo.executeUpdate();
-            
+            lm.setIsAdmin(false);
+            lm.setFlag(0);
             vo = null;
             System.out.println("로그아웃 되었습니다.");
             return vo;
