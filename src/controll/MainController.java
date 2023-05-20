@@ -3,7 +3,6 @@ package controll;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import oracle.core.lmx.LmxRepConversion;
 import service.IAdminService;
 import service.IMemberService;
 import service.ITicketService;
@@ -50,7 +49,7 @@ public class MainController {
         			break; // 예매 취소
         			case 5: ms.memberMenu(lm);
         			break; // 회원정보 관리
-        			case 6: lm.loginUser(ms.logout());
+        			case 6: lm.loginUser(ms.logout(lm));
         			break; // 로그아웃
         			default: System.out.println("입력을 확인해주세요");
         			break;

@@ -10,7 +10,7 @@ import util.LoginManager;
 public interface IMemberService {
 	void register() throws IOException, NoSuchAlgorithmException;
 	MemberVO login() throws IOException;
-	MemberVO logout();
+	MemberVO logout(LoginManager lm);
 	
 	void myProfile() throws SQLException, IOException;
     void editProfile() throws IOException;

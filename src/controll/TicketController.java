@@ -110,13 +110,11 @@ public class TicketController implements ITicketService {
 			cols = theater.getInt(2);
 		}
 		catch (Exception e) {
-			
 			return null;
 		}
 
 		ResultSet seat = null;
 		boolean[][] chk = new boolean[rows][cols];
-		//		for (int i = 0; i < 10; i++) chk[(int)(Math.random() * rows)][(int)(Math.random() * cols)] = true;
 		try {
 			pstmtSearchSeatInfo.setString(1, str);
 			seat = pstmtSearchSeatInfo.executeQuery();
@@ -125,7 +123,6 @@ public class TicketController implements ITicketService {
 				chk[seatNum.charAt(0) - 'A'][Integer.parseInt(seatNum.substring(1)) - 1] = true;
 			}
 		} catch (SQLException e) {
-			
 			return null;
 		}
 
@@ -140,7 +137,6 @@ public class TicketController implements ITicketService {
 			if (i % 5 == 0) System.out.print(" ");
 		}
 		System.out.println(" │");
-		// 열 번호도 출력하기
 		for (int i = 0; i < rows; i++) {
 			System.out.print((char)('A' + i) + "    ");
 			for (int j = 0; j < cols; j++) {
@@ -290,10 +286,9 @@ public class TicketController implements ITicketService {
 				System.out.println("메뉴로 돌아가기 : q");
 				while (true) {
 					try {
-						System.out.println("좌석은 (열행)순으로 입력해주세요 ex) A1 D15");
+						System.out.println("좌석은 (행열)순으로 입력해주세요 ex) A1 D15");
 						System.out.printf("%d개의 좌석을 선택해주세요 : ", total);
 						
-						// 좌석 입력 후 올바른 좌석형식인지 검사
 						String input = br.readLine().trim();
 						if (input.equalsIgnoreCase("q")) {
 							ConnectionSingletonHelper.getConnection().rollback();

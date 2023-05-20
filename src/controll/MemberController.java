@@ -201,12 +201,13 @@ public class MemberController implements IMemberService {
     }
 
     @Override
-    public MemberVO logout() {
+    public MemberVO logout(LoginManager lm) {
         try {
             pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo );
             pstmtUpdateMemberLoginInfo.setInt(1, 0);
             pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
             pstmtUpdateMemberLoginInfo.executeUpdate();
+            
             vo = null;
             System.out.println("로그아웃 되었습니다.");
             return vo;
