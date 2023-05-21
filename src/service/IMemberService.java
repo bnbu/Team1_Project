@@ -1,21 +1,17 @@
 package service;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.SQLException;
-
 import model.MemberVO;
 import util.LoginManager;
 
 public interface IMemberService {
-	void register() throws IOException, NoSuchAlgorithmException;
-	MemberVO login() throws IOException;
+	void register();
+	MemberVO login();
 	MemberVO logout(LoginManager lm);
 	
-	void myProfile() throws SQLException, IOException;
-    void editProfile() throws IOException;
-    void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts) throws NumberFormatException, IOException;
-    void memberMenu(LoginManager lm) throws NumberFormatException, IOException;
-    void removeMember(LoginManager lm) throws IOException;
+	void myProfile();
+    void editProfile();
+    void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts);
+    void memberMenu(LoginManager lm);
+    void removeMember(LoginManager lm);
     void AllClose();
 }

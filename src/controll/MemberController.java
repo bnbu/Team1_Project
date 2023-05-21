@@ -43,19 +43,10 @@ public class MemberController implements IMemberService {
         conn = ConnectionSingletonHelper.getConnection();
         br = new BufferedReader(new InputStreamReader(System.in));
         sb = new StringBuilder();
-        pstmtInsertMember = conn.prepareStatement(sqlInsertMember);
-        pstmtDeleteMember = conn.prepareStatement(sqlDeleteMember);
-        pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo);
-        pstmtUpdateMember = conn.prepareStatement(sqlUpdateMember);
-        pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
-        pstmtSelectMember = conn.prepareStatement(sqlSelectMember);
-        pstmtSelectMember = conn.prepareStatement(sqlSelectMemberValid);
-        pstmtSelectLikeByid = conn.prepareStatement(sqlSelectLikeByid);
-        pstmtSearchAdmin = conn.prepareStatement(sqlSearchAdmin);
     }
 
     @Override
-    public void register() throws IOException, NoSuchAlgorithmException {
+    public void register() {
         SHA256 sha256 = new SHA256();
         try {
             String memberId = null,
@@ -74,14 +65,14 @@ public class MemberController implements IMemberService {
                     System.out.println("잘못된 입력양식 입니다. 다시 입력하십시오");
                     continue;
                 }
-
+                pstmtSelectLikeByid = conn.prepareStatement(sqlSelectLikeByid);
                 pstmtSelectLikeByid.setString(1, memberId);
                 rs = pstmtSelectLikeByid.executeQuery();
                 if(rs.isBeforeFirst()) {
                     System.out.println("이미 존재하는 아이디입니다.");
                     continue;
                 }
-
+              	pstmtInsertMember = conn.prepareStatement(sqlInsertMember);
                 pstmtInsertMember.setString(1, memberId);
                 break;
             }
@@ -157,7 +148,12 @@ public class MemberController implements IMemberService {
         } catch (SQLException e) {
             System.out.println("다시 시도해주세요");
             return;
-        }
+        } catch (IOException e) {
+		} catch (NoSuchAlgorithmException e) {
+		} finally {
+			ConnectionSingletonHelper.close(pstmtSelectLikeByid);
+			ConnectionSingletonHelper.close(pstmtInsertMember);
+		}
     }
 
     private boolean isValid(String pattern, String member_Id) {
@@ -165,11 +161,12 @@ public class MemberController implements IMemberService {
     }
 
     @Override
-    public MemberVO login() throws IOException {
+    public MemberVO login(){
         SHA256 sha256 = new SHA256();
         vo = new MemberVO();
 
         try {
+        	pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
             System.out.print("ID: ");
             String memberId = br.readLine().trim();
             System.out.print("PassWord: ");
@@ -190,21 +187,24 @@ public class MemberController implements IMemberService {
                 vo.setMember_name(rs.getString(2));
                 vo.setMember_valid(rs.getInt(3));
             }
-
+            
+            pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo);
             pstmtUpdateMemberLoginInfo.setInt(1, 1);
             pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
             pstmtUpdateMemberLoginInfo.executeUpdate();
             System.out.println("로그인이 되었습니다.");
         } catch (Exception e) {
-            
-        } 
+        } finally {
+        	ConnectionSingletonHelper.close(pstmtUpdateMemberLoginInfo);
+			ConnectionSingletonHelper.close(pstmtSelectMemberValid);
+		}
         return vo;
     }
 
     @Override
     public MemberVO logout(LoginManager lm) {
         try {
-            pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo );
+            pstmtUpdateMemberLoginInfo = conn.prepareStatement(sqlUpdateMemberLoginInfo);
             pstmtUpdateMemberLoginInfo.setInt(1, 0);
             pstmtUpdateMemberLoginInfo.setString(2, vo.getMember_id());
             pstmtUpdateMemberLoginInfo.executeUpdate();
@@ -214,13 +214,14 @@ public class MemberController implements IMemberService {
             System.out.println("로그아웃 되었습니다.");
             return vo;
         } catch (Exception e) {
-            
-        }
+        }finally {
+        	ConnectionSingletonHelper.close(pstmtUpdateMemberLoginInfo);
+		}
         return vo;
     }
 
     @Override
-    public void myProfile() throws IOException {
+    public void myProfile(){
         sb.setLength(0);
         sdf = new SimpleDateFormat("yyyy-MM-dd");
         try {
@@ -241,19 +242,20 @@ public class MemberController implements IMemberService {
             sb.append("──────────┴─────────────────────────────────────").append("\n");
             System.out.println(sb);
         } catch (SQLException e) {
-            
-        }
+        } finally {
+			ConnectionSingletonHelper.close(pstmtSelectMember);
+		}
     }
 
     @Override
-    public void editProfile() throws IOException {
+    public void editProfile(){
         SHA256 sha256 = new SHA256();
         String memberName,memberPwd,memberPhone,memberBirthday;
         try {
             System.out.println("───────────────────회원정보 수정───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine().trim());
-
+            pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
             pstmtSelectMemberValid.setString(1, vo.getMember_id());
             pstmtSelectMemberValid.setString(2, pwd);
             pstmtSelectMemberValid.setInt(3, 1);
@@ -262,6 +264,7 @@ public class MemberController implements IMemberService {
                 System.out.println("비밀번호가 틀렸습니다.");
                 return;
             }
+            pstmtUpdateMember = conn.prepareStatement(sqlUpdateMember);
             pstmtUpdateMember.setString(5, vo.getMember_id()); 
 
             System.out.println("메뉴로 돌아가기 : q");
@@ -325,21 +328,22 @@ public class MemberController implements IMemberService {
             System.out.println(result + "개 업데이트 성공");
 
         } catch (SQLException e) {
-            
+        } catch (IOException e) {
         } catch (NoSuchAlgorithmException e) {
-            
-        }
+		} finally {
+			ConnectionSingletonHelper.close(pstmtSelectMemberValid);
+			ConnectionSingletonHelper.close(pstmtUpdateMember);
+		}
     }
 
     @Override
-    public void removeMember(LoginManager lm) throws IOException {
+    public void removeMember(LoginManager lm){
         SHA256 sha256 = new SHA256();
         try {
             System.out.println("───────────────────회원 탈퇴───────────────────");
             System.out.println("회원 확인을 위해 비밀번호를 입력해주세요 ");
             System.out.print("비밀번호: "); String pwd = sha256.encrypt(br.readLine().trim());
-            System.out.println(pwd);
-
+            pstmtSelectMemberValid = conn.prepareStatement(sqlSelectMemberValid);
             pstmtSelectMemberValid.setString(1, vo.getMember_id());
             pstmtSelectMemberValid.setString(2, pwd);
             pstmtSelectMemberValid.setInt(3, 1);
@@ -349,6 +353,7 @@ public class MemberController implements IMemberService {
                 return;
             }
 
+            pstmtDeleteMember = conn.prepareStatement(sqlDeleteMember);
             pstmtDeleteMember.setString(1, vo.getMember_id());
 
             int result = pstmtDeleteMember.executeUpdate();
@@ -356,10 +361,12 @@ public class MemberController implements IMemberService {
             vo = null;
             lm.loginUser(vo);
         } catch (SQLException e) {
-            
+        } catch (IOException e) {
         } catch (NoSuchAlgorithmException e) {
-            
-        }
+		} finally {
+			ConnectionSingletonHelper.close(pstmtDeleteMember);
+			ConnectionSingletonHelper.close(pstmtSelectMemberValid);
+		}
     }
     
     private void menu() {
@@ -389,23 +396,18 @@ public class MemberController implements IMemberService {
         System.out.print(sb);
     }
 
-    public void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts) throws NumberFormatException, IOException {
+    public void loginMenu(LoginManager lm, IMemberService ms, ITicketService ts){
         while (true) {
             menu2();
             try {
                 switch (Integer.parseInt(br.readLine().trim())) {
                 case 1:
-                    try {
-                        register();
-                    } catch (NoSuchAlgorithmException e) {
-                        
-                    } catch (IOException e) {
-                        
-                    }
+                    register();
                     break; // 회원가입
                 case 2:
                     lm.loginUser(login());
                     if(lm.getLoginUser()!=null) {
+                    	pstmtSearchAdmin = conn.prepareStatement(sqlSearchAdmin);
                     	pstmtSearchAdmin.setString(1, lm.getLoginUser().getMember_id());
                     	rs = pstmtSearchAdmin.executeQuery();
                     	if(rs.next()) {
@@ -423,18 +425,18 @@ public class MemberController implements IMemberService {
                 default: System.out.println("입력을 확인해주세요.");
                 break;
                 } // switch end
-
             } catch (Exception e) {
-                
                 System.out.println("잘못된 입력입니다.");
-            }
+            } finally {
+				ConnectionSingletonHelper.close(pstmtSearchAdmin);
+			}
         } // while end
     }
 
 
 
     @Override
-    public void memberMenu(LoginManager lm) throws NumberFormatException, IOException {
+    public void memberMenu(LoginManager lm) {
         while (true) {
             menu();
             try {
@@ -460,13 +462,10 @@ public class MemberController implements IMemberService {
             }
         } // while end
     }
-    @Override
-    public void AllClose() {
-        ConnectionSingletonHelper.close(pstmtInsertMember);
-        ConnectionSingletonHelper.close(pstmtSelectMemberValid);
-        ConnectionSingletonHelper.close(pstmtUpdateMemberLoginInfo);
-        ConnectionSingletonHelper.close(pstmtSelectMember);
-        ConnectionSingletonHelper.close(pstmtUpdateMember);
-        ConnectionSingletonHelper.close(pstmtDeleteMember);
-    }
+
+	@Override
+	public void AllClose() {
+		// TODO Auto-generated method stub
+		
+	}
 }
