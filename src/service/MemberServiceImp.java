@@ -1,4 +1,4 @@
-package controll;
+package service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,13 +14,11 @@ import java.text.SimpleDateFormat;
 import java.util.regex.Pattern;
 
 import model.MemberVO;
-import service.IMemberService;
-import service.ITicketService;
 import util.ConnectionSingletonHelper;
 import util.LoginManager;
 import util.SHA256;
 
-public class MemberController implements IMemberService {
+public class MemberServiceImp implements IMemberService {
     private static Connection conn;
     private static BufferedReader br;
     private StringBuilder sb;
@@ -39,7 +37,7 @@ public class MemberController implements IMemberService {
             sqlDeleteMember = "UPDATE MEMBER SET MEMBER_VALID=3 WHERE MEMBER_ID=?",
             sqlSearchAdmin = "SELECT \"flag\" FROM ADMIN WHERE MEMBER_ID = ?";
 
-    public MemberController() throws Exception {
+    public MemberServiceImp() throws Exception {
         conn = ConnectionSingletonHelper.getConnection();
         br = new BufferedReader(new InputStreamReader(System.in));
         sb = new StringBuilder();

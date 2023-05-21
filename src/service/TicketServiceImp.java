@@ -1,4 +1,4 @@
-package controll;
+package service;
 
 import java.io.*;
 import java.sql.*;
@@ -9,10 +9,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import service.ITicketService;
 import util.ConnectionSingletonHelper;
 
-public class TicketController implements ITicketService {
+public class TicketServiceImp implements ITicketService {
 	private static Connection conn;
 	private BufferedReader br;
 	private PreparedStatement pstmtTotalMovie, pstmtTotalScreeningInfo, pstmtInsertTicket, pstmtCancelTicket,
@@ -39,7 +38,7 @@ public class TicketController implements ITicketService {
 			sqlSearchSeatValid = "SELECT COUNT(*) FROM SEAT_INFO SI JOIN TICKETING T ON SI.TICKET_NO = T.TICKET_NO WHERE T.VALID = 1 AND SI.SEAT_NO = ? AND T.SCREENINFO_NO = ?";
 			
 	private ResultSet rs;
-	public TicketController() throws Exception {
+	public TicketServiceImp() throws Exception {
 		br = new BufferedReader(new InputStreamReader(System.in));
 		conn = ConnectionSingletonHelper.getConnection();
 		try {

@@ -3,9 +3,12 @@ package controll;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import service.AdminServiceImp;
 import service.IAdminService;
 import service.IMemberService;
 import service.ITicketService;
+import service.MemberServiceImp;
+import service.TicketServiceImp;
 import util.LoginManager;
 
 public class MainController { 
@@ -18,9 +21,9 @@ public class MainController {
     public MainController() {
         br = new BufferedReader(new InputStreamReader(System.in));
         try {
-            ms = new MemberController();
-            ts = new TicketController();
-            as = new AdminController();
+            ms = new MemberServiceImp();
+            ts = new TicketServiceImp();
+            as = new AdminServiceImp();
             lm = null;
         } catch (Exception e) {
             

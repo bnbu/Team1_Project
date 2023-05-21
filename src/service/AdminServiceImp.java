@@ -1,4 +1,4 @@
-package controll;
+package service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,11 +10,10 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import service.IAdminService;
 import util.ConnectionSingletonHelper;
 import util.LoginManager;
 
-public class AdminController implements IAdminService {
+public class AdminServiceImp implements IAdminService {
     private BufferedReader br;
     private ResultSet rs;
     private StringBuilder sb;
@@ -35,7 +34,7 @@ public class AdminController implements IAdminService {
 			sqlSelectDaily = "SELECT SUM(PRICE) FROM TICKETING WHERE VALID = 1 AND TO_CHAR(TICKET_DATE , 'YYMMDD') = TO_CHAR(SYSDATE , 'YYMMDD')";
 
 
-    public AdminController() {
+    public AdminServiceImp() {
         try {
             br = new BufferedReader(new InputStreamReader(System.in));
             Connection conn = ConnectionSingletonHelper.getConnection();
