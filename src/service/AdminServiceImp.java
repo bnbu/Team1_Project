@@ -334,10 +334,10 @@ public class AdminServiceImp implements IAdminService {
     @Override
     public void sales() {
     	sb.setLength(0);
-    	System.out.println("메뉴로 돌아가기 : q");
-    	System.out.println("1. 일일 매출 조회\n2. 월별 매출 조회");
+    	
     	while(true){
-    		
+    		System.out.println("메뉴로 돌아가기 : q");
+    	    System.out.println("1. 일일 매출 조회\n2. 월별 매출 조회");
     		try {
     			String num = br.readLine();
     			if (num.equalsIgnoreCase("q")) return;
