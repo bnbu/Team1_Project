@@ -33,7 +33,7 @@ public class TicketServiceImp implements ITicketService {
 			sqlInsertSeat = "INSERT INTO SEAT_INFO VALUES (?, ?, ?)",
 			sqlSearchTicketDesc = "SELECT * FROM TICKETING WHERE MEMBER_ID = ? ORDER BY TICKET_DATE DESC",
 			sqlSeatNo = "SELECT SEAT_NO FROM SEAT_INFO WHERE TICKET_NO = ?",
-			sqlTicketInfoByNo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE, TI.VALID, TO_CHAR(SI.MOVIE_START, 'YYYY-MM-DD HH24:MI') FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.TICKET_NO = ?",
+			sqlTicketInfoByNo = "SELECT TI.TICKET_NO, TI.SCREENINFO_NO, TI.PEOPLE, TO_CHAR(PRICE, '999,999,999')||'원', TO_CHAR(TI.TICKET_DATE, 'YYYY-MM-DD HH24:MI'), TO_CHAR(TI.CANCLE_DATE, 'YYYY-MM-DD HH24:MI'), M.MOVIE_TITLE, TI.VALID, TO_CHAR(SI.MOVIE_START, 'YYYY-MM-DD HH24:MI'), TO_CHAR(SI.MOVIE_END, 'YYYY-MM-DD HH24:MI') FROM (TICKETING TI INNER JOIN SCREENING_INFO SI ON TI.SCREENINFO_NO = SI.SCREENINFO_NO) INNER JOIN MOVIE M ON SI.MOVIE_NO = M.MOVIE_NO AND TI.TICKET_NO = ?",
 			sqlSearchMovie = "SELECT COUNT(*) FROM MOVIE WHERE MOVIE_NO = ?",
 			sqlSearchSeatValid = "SELECT COUNT(*) FROM SEAT_INFO SI JOIN TICKETING T ON SI.TICKET_NO = T.TICKET_NO WHERE T.VALID = 1 AND SI.SEAT_NO = ? AND T.SCREENINFO_NO = ?";
 			
@@ -505,6 +505,10 @@ public class TicketServiceImp implements ITicketService {
 				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "제목", rs.getString(7))).append("\n");
 				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "상영 시작", rs.getString(9))).append("\n");
+				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "상영 종료", rs.getString(10))).append("\n");
+				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "인원", rs.getString(3))).append("\n");
 				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│", "좌석"));
@@ -531,6 +535,10 @@ public class TicketServiceImp implements ITicketService {
 				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "제목", rs.getString(7))).append("\n");
 				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "상영 시작", rs.getString(9))).append("\n");
+				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
+				sb.append(String.format("%-6s│%s", "상영 종료", rs.getString(10))).append("\n");
+				sb.append("──────────┴──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│%s", "인원", rs.getString(3))).append("\n");
 				sb.append("──────────┼──────────────────────────────────────────────").append("\n");
 				sb.append(String.format("%-8s│", "좌석"));

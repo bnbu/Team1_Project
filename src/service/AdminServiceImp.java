@@ -383,7 +383,6 @@ public class AdminServiceImp implements IAdminService {
     		catch(Exception e) {
     			System.out.println("잘못된 입력방식입니다. \n다시 입력하십시오");
     		} 
-		sales();
     	}
     }
 
